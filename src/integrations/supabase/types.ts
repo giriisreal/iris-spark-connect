@@ -168,6 +168,7 @@ export type Database = {
           age: number
           bio: string | null
           city: string | null
+          compatibility_data: Json | null
           created_at: string
           gender: string
           id: string
@@ -186,6 +187,7 @@ export type Database = {
           age: number
           bio?: string | null
           city?: string | null
+          compatibility_data?: Json | null
           created_at?: string
           gender: string
           id?: string
@@ -204,6 +206,7 @@ export type Database = {
           age?: number
           bio?: string | null
           city?: string | null
+          compatibility_data?: Json | null
           created_at?: string
           gender?: string
           id?: string

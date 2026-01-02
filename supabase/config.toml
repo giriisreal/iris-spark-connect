@@ -1,1 +1,4 @@
 project_id = "vdgzmaghzzqveeoqwoks"
+
+[functions.compatibility-score]
+verify_jwt = true
