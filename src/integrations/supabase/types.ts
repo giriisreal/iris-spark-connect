@@ -116,6 +116,62 @@ export type Database = {
           },
         ]
       }
+      game_sessions: {
+        Row: {
+          created_at: string
+          current_question: Json | null
+          current_round: number | null
+          game_type: string
+          id: string
+          match_id: string
+          max_rounds: number | null
+          player1_answer: string | null
+          player1_score: number | null
+          player2_answer: string | null
+          player2_score: number | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_question?: Json | null
+          current_round?: number | null
+          game_type: string
+          id?: string
+          match_id: string
+          max_rounds?: number | null
+          player1_answer?: string | null
+          player1_score?: number | null
+          player2_answer?: string | null
+          player2_score?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_question?: Json | null
+          current_round?: number | null
+          game_type?: string
+          id?: string
+          match_id?: string
+          max_rounds?: number | null
+          player1_answer?: string | null
+          player1_score?: number | null
+          player2_answer?: string | null
+          player2_score?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sessions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           created_at: string
@@ -275,10 +331,12 @@ export type Database = {
           age: number
           bio: string | null
           boundaries: string[] | null
+          break_mode_until: string | null
           city: string | null
           comfort_tags: string[] | null
           compatibility_data: Json | null
           created_at: string
+          daily_usage_minutes: number | null
           dating_mode: string | null
           energy_preferences: Json | null
           gender: string
@@ -295,6 +353,8 @@ export type Database = {
           non_negotiables: string[] | null
           profile_theme: string | null
           pronouns: string | null
+          session_start_time: string | null
+          social_links: Json | null
           updated_at: string
           user_id: string
           vibe_status: string | null
@@ -304,10 +364,12 @@ export type Database = {
           age: number
           bio?: string | null
           boundaries?: string[] | null
+          break_mode_until?: string | null
           city?: string | null
           comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string
+          daily_usage_minutes?: number | null
           dating_mode?: string | null
           energy_preferences?: Json | null
           gender: string
@@ -324,6 +386,8 @@ export type Database = {
           non_negotiables?: string[] | null
           profile_theme?: string | null
           pronouns?: string | null
+          session_start_time?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id: string
           vibe_status?: string | null
@@ -333,10 +397,12 @@ export type Database = {
           age?: number
           bio?: string | null
           boundaries?: string[] | null
+          break_mode_until?: string | null
           city?: string | null
           comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string
+          daily_usage_minutes?: number | null
           dating_mode?: string | null
           energy_preferences?: Json | null
           gender?: string
@@ -353,6 +419,8 @@ export type Database = {
           non_negotiables?: string[] | null
           profile_theme?: string | null
           pronouns?: string | null
+          session_start_time?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id?: string
           vibe_status?: string | null
@@ -435,6 +503,38 @@ export type Database = {
           {
             foreignKeyName: "swipes_swiper_id_fkey"
             columns: ["swiper_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_sessions: {
+        Row: {
+          duration_minutes: number | null
+          ended_at: string | null
+          id: string
+          profile_id: string
+          started_at: string
+        }
+        Insert: {
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          profile_id: string
+          started_at?: string
+        }
+        Update: {
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          profile_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

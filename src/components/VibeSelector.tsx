@@ -1,23 +1,30 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-
-interface VibeSelectorProps {
-  selectedVibe: string;
-  onVibeChange: (vibe: string) => void;
-}
+import { useProfile } from '@/hooks/useProfile';
+import { useToast } from '@/hooks/use-toast';
 
 const vibes = [
-  { id: 'chill', emoji: '😌', label: 'Chill & Slow', color: 'from-blue-400 to-blue-600' },
-  { id: 'deep_talks', emoji: '🌙', label: 'Deep Talks', color: 'from-purple-400 to-purple-600' },
-  { id: 'fun_chaotic', emoji: '🎉', label: 'Fun & Chaotic', color: 'from-orange-400 to-red-500' },
-  { id: 'energetic', emoji: '⚡', label: 'Energetic', color: 'from-yellow-400 to-orange-500' },
-  { id: 'romantic', emoji: '💕', label: 'Romantic', color: 'from-pink-400 to-rose-500' },
-  { id: 'adventurous', emoji: '🏔️', label: 'Adventurous', color: 'from-green-400 to-emerald-600' },
+  { id: 'chill', emoji: '😌', label: 'Chill & Slow' },
+  { id: 'deep_talks', emoji: '🌙', label: 'Deep Talks' },
+  { id: 'fun_chaotic', emoji: '🎉', label: 'Fun & Chaotic' },
+  { id: 'energetic', emoji: '⚡', label: 'Energetic' },
+  { id: 'romantic', emoji: '💕', label: 'Romantic' },
+  { id: 'adventurous', emoji: '🏔️', label: 'Adventurous' },
 ];
 
-const VibeSelector = ({ selectedVibe, onVibeChange }: VibeSelectorProps) => {
+const VibeSelector = () => {
+  const { profile, updateProfile } = useProfile();
+  const { toast } = useToast();
+  const selectedVibe = profile?.vibe_status || 'chill';
+
+  const handleVibeChange = async (vibe: string) => {
+    const { error } = await updateProfile({ vibe_status: vibe });
+    if (!error) {
+      toast({ title: 'Vibe updated! ✨', description: `You're feeling ${vibe.replace('_', ' ')} today` });
+    }
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="bg-card rounded-xl border-2 border-foreground shadow-[4px_4px_0px_0px_hsl(var(--foreground))] p-6 space-y-3">
       <h3 className="font-bold text-foreground flex items-center gap-2">
         <span className="text-lg">✨</span> Today's Vibe
       </h3>
@@ -25,7 +32,7 @@ const VibeSelector = ({ selectedVibe, onVibeChange }: VibeSelectorProps) => {
         {vibes.map((vibe) => (
           <motion.button
             key={vibe.id}
-            onClick={() => onVibeChange(vibe.id)}
+            onClick={() => handleVibeChange(vibe.id)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className={`p-3 rounded-xl border-2 transition-all text-center ${
