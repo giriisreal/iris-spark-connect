@@ -25,6 +25,10 @@ interface OtherProfile {
   bio: string | null;
   city: string | null;
   interests: string[];
+  vibe_status: string | null;
+  non_negotiables: string[] | null;
+  pickup_lines: string[] | null;
+  personal_notes: string[] | null;
   photos: { id: string; photo_url: string; is_primary: boolean | null; order_index: number | null; profile_id: string; created_at: string }[];
 }
 
@@ -65,7 +69,7 @@ const Chat = () => {
 
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('id, name, age, bio, city, interests')
+          .select('id, name, age, bio, city, interests, vibe_status, non_negotiables, pickup_lines, personal_notes')
           .eq('id', otherProfileId)
           .single();
 
@@ -348,6 +352,10 @@ const Chat = () => {
             profile={{
               ...otherProfile,
               interests: otherProfile.interests || [],
+              vibeStatus: otherProfile.vibe_status || undefined,
+              nonNegotiables: otherProfile.non_negotiables || undefined,
+              pickupLines: otherProfile.pickup_lines || undefined,
+              personalNotes: otherProfile.personal_notes || undefined,
             }}
             onClose={() => setShowProfile(false)}
             showActions={false}

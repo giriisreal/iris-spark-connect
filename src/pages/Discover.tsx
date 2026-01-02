@@ -24,6 +24,10 @@ interface DiscoverProfile {
   compatibilityScore?: number;
   icebreaker?: string;
   distance?: number;
+  vibeStatus?: string;
+  nonNegotiables?: string[];
+  pickupLines?: string[];
+  personalNotes?: string[];
 }
 
 const SWIPE_THRESHOLD = 100;
@@ -79,7 +83,7 @@ const Discover = () => {
     
     let query = supabase
       .from('profiles')
-      .select('id, name, age, bio, city, interests, location_lat, location_lng')
+      .select('id, name, age, bio, city, interests, location_lat, location_lng, vibe_status, non_negotiables, pickup_lines, personal_notes')
       .neq('id', profile.id);
 
     if (profile.looking_for && profile.looking_for.length > 0) {
@@ -115,7 +119,15 @@ const Discover = () => {
               p.location_lng
             );
           }
-          return { ...p, photos: [] as ProfilePhoto[], distance };
+          return { 
+            ...p, 
+            photos: [] as ProfilePhoto[], 
+            distance,
+            vibeStatus: p.vibe_status || undefined,
+            nonNegotiables: p.non_negotiables || undefined,
+            pickupLines: p.pickup_lines || undefined,
+            personalNotes: p.personal_notes || undefined,
+          };
         });
 
       if (profile.max_distance && profile.location_lat) {
