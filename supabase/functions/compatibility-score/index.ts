@@ -24,9 +24,18 @@ serve(async (req) => {
 
     console.log('Computing compatibility between profiles...');
 
-    const prompt = `You are a dating compatibility analyst. Analyze the compatibility between two people based on their profiles and return a compatibility score and insights.
+    const systemPrompt = `You are a dating compatibility analyst.
+Return ONLY valid JSON with this shape:
+{
+  "score": number, // 0-100
+  "summary": string, // 1-2 sentences
+  "icebreaker": string, // < 20 words
+  "sharedInterests": string[],
+  "compatibility_factors": string[]
+}
+No markdown, no backticks.`;
 
-User 1:
+    const userPrompt = `User 1:
 - Name: ${userProfile.name}
 - Age: ${userProfile.age}
 - Gender: ${userProfile.gender}
@@ -44,7 +53,7 @@ User 2:
 - City: ${targetProfile.city || 'Unknown'}
 - Looking for: ${targetProfile.looking_for?.join(', ') || 'Anyone'}
 
-Analyze their compatibility and provide insights.`;
+Analyze compatibility and reply with JSON only.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -55,48 +64,9 @@ Analyze their compatibility and provide insights.`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a dating compatibility expert. Be positive and encouraging.' },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'compatibility_result',
-              description: 'Return the compatibility analysis result',
-              parameters: {
-                type: 'object',
-                properties: {
-                  score: { 
-                    type: 'number', 
-                    description: 'Compatibility score from 0 to 100' 
-                  },
-                  summary: { 
-                    type: 'string', 
-                    description: 'A short 1-2 sentence summary of compatibility' 
-                  },
-                  sharedInterests: { 
-                    type: 'array', 
-                    items: { type: 'string' },
-                    description: 'List of shared interests' 
-                  },
-                  icebreaker: { 
-                    type: 'string', 
-                    description: 'A fun icebreaker message suggestion' 
-                  },
-                  compatibility_factors: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Key factors contributing to compatibility'
-                  }
-                },
-                required: ['score', 'summary', 'icebreaker'],
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: 'function', function: { name: 'compatibility_result' } }
       }),
     });
 
@@ -119,25 +89,27 @@ Analyze their compatibility and provide insights.`;
     }
 
     const data = await response.json();
-    console.log('AI response:', JSON.stringify(data));
+    const content: string = data.choices?.[0]?.message?.content || '';
 
-    // Extract the tool call result
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      const result = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let result: any = null;
+    try {
+      const cleaned = content.replace(/```json\n?|\n?```/g, '').trim();
+      result = JSON.parse(cleaned);
+    } catch (e) {
+      console.error('Failed to parse AI JSON:', e, 'raw:', content);
     }
 
-    // Fallback if no tool call
-    return new Response(JSON.stringify({
-      score: 75,
-      summary: 'You two seem like a great match!',
-      icebreaker: 'Ask about their interests!',
-      sharedInterests: [],
-      compatibility_factors: []
-    }), {
+    if (!result || typeof result.score !== 'number' || !result.summary || !result.icebreaker) {
+      result = {
+        score: 75,
+        summary: 'You two seem like a great match!',
+        icebreaker: 'What’s something you’ve been obsessed with lately?',
+        sharedInterests: [],
+        compatibility_factors: [],
+      };
+    }
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

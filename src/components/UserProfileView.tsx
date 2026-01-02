@@ -1,9 +1,8 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Heart, Sparkles, MessageCircle, Volume2, Shield, Users, Zap, Music, Gamepad2, BookOpen, Mic, Quote, StickyNote } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, MapPin, Heart, Sparkles, MessageCircle, Shield, Users, Zap, Mic, Quote, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfilePhoto } from '@/hooks/useProfile';
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useMemo, useState } from 'react';
 
 interface UserProfileViewProps {
   profile: {
@@ -13,7 +12,7 @@ interface UserProfileViewProps {
     bio: string | null;
     city: string | null;
     interests: string[];
-    photos: ProfilePhoto[];
+    photos?: ProfilePhoto[];
     compatibilityScore?: number;
     distance?: number;
     icebreaker?: string;
@@ -37,18 +36,18 @@ interface UserProfileViewProps {
 }
 
 const vibeEmojis: Record<string, string> = {
-  'chill': '😌',
-  'energetic': '⚡',
-  'deep_talks': '🌙',
-  'fun_chaotic': '🎉',
-  'romantic': '💕',
-  'adventurous': '🏔️'
+  chill: '😌',
+  energetic: '⚡',
+  deep_talks: '🌙',
+  fun_chaotic: '🎉',
+  romantic: '💕',
+  adventurous: '🏔️',
 };
 
 const UserProfileView = ({ profile, onClose, onLike, onDislike, showActions = true }: UserProfileViewProps) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
-  const photos = profile.photos.length > 0 ? profile.photos : [];
+
+  const photos = useMemo(() => (profile.photos?.length ? profile.photos : []), [profile.photos]);
 
   const nextPhoto = () => {
     if (photos.length > 1) {
@@ -59,15 +58,6 @@ const UserProfileView = ({ profile, onClose, onLike, onDislike, showActions = tr
   const prevPhoto = () => {
     if (photos.length > 1) {
       setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
-    }
-  };
-
-  const playVoiceIntro = () => {
-    if (profile.voiceIntroUrl) {
-      setIsPlayingVoice(true);
-      const audio = new Audio(profile.voiceIntroUrl);
-      audio.play();
-      audio.onended = () => setIsPlayingVoice(false);
     }
   };
 
@@ -187,32 +177,46 @@ const UserProfileView = ({ profile, onClose, onLike, onDislike, showActions = tr
             </div>
           </div>
 
+          {/* Thumbnail strip */}
+          {photos.length > 1 && (
+            <div className="border-b-2 border-foreground bg-card p-3">
+              <div className="flex gap-2 overflow-x-auto">
+                {photos.map((p, idx) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setCurrentPhotoIndex(idx)}
+                    className={`shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
+                      idx === currentPhotoIndex ? 'border-primary' : 'border-foreground/50'
+                    }`}
+                    aria-label={`View photo ${idx + 1}`}
+                  >
+                    <img
+                      src={p.photo_url}
+                      alt={`${profile.name} photo ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Profile Info Section */}
           <div className="p-6 space-y-6">
             {/* Voice Intro */}
             {profile.voiceIntroUrl && (
-              <motion.button
-                onClick={playVoiceIntro}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`w-full p-4 rounded-xl border-2 border-foreground flex items-center justify-center gap-3 transition-colors ${
-                  isPlayingVoice 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-secondary/30 hover:bg-secondary/50'
-                }`}
-              >
-                <Mic className="w-5 h-5" />
-                <span className="font-bold">
-                  {isPlayingVoice ? 'Playing voice intro...' : 'Listen to voice intro 🎧'}
-                </span>
-                {isPlayingVoice && (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 0.5 }}
-                    className="w-2 h-2 rounded-full bg-current"
-                  />
-                )}
-              </motion.button>
+              <div className="space-y-2">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-primary" /> Voice intro
+                </h3>
+                <audio
+                  src={profile.voiceIntroUrl}
+                  controls
+                  className="w-full h-10"
+                />
+              </div>
             )}
 
             {/* About Section */}

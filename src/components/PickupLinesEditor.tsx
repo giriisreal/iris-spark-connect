@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,26 @@ const MAX_LINES = 5;
 
 const PickupLinesEditor = () => {
   const { profile, updateProfile, fetchProfile } = useProfile();
-  const [lines, setLines] = useState<string[]>(profile?.pickup_lines || []);
+  const [lines, setLines] = useState<string[]>([]);
   const [newLine, setNewLine] = useState('');
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    setLines(profile?.pickup_lines ?? []);
+  }, [profile?.pickup_lines]);
+
   const handleAddLine = async () => {
+    if (!profile) {
+      toast({ title: 'Profile not loaded yet', variant: 'destructive' });
+      return;
+    }
     if (!newLine.trim() || lines.length >= MAX_LINES) return;
-    
+
     setSaving(true);
     const updatedLines = [...lines, newLine.trim()];
     const { error } = await updateProfile({ pickup_lines: updatedLines });
-    
+
     if (!error) {
       setLines(updatedLines);
       setNewLine('');
@@ -33,9 +41,10 @@ const PickupLinesEditor = () => {
   };
 
   const handleRemoveLine = async (index: number) => {
+    if (!profile) return;
     const updatedLines = lines.filter((_, i) => i !== index);
     const { error } = await updateProfile({ pickup_lines: updatedLines });
-    
+
     if (!error) {
       setLines(updatedLines);
       fetchProfile();
