@@ -107,16 +107,9 @@ const HeroSection = () => {
             transition={{ delay: 0.5 }}
             className="mt-16 text-sm text-muted-foreground"
           >
-            <p className="mb-6">Trusted by thousands of happy couples</p>
+            
             <div className="flex items-center justify-center gap-8 flex-wrap opacity-60">
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Users className="w-5 h-5" />
-                2M+ Users
-              </div>
-              <div className="flex items-center gap-2 font-semibold text-foreground">
-                <Heart className="w-5 h-5" />
-                500K+ Matches
-              </div>
+             
               <div className="flex items-center gap-2 font-semibold text-foreground">
                 <Zap className="w-5 h-5" />
                 AI-Powered
@@ -129,30 +122,7 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Features Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="grid md:grid-cols-3 gap-6 mt-24"
-        >
-          <FeatureCard
-            icon={<Heart className="w-6 h-6" />}
-            title="AI Matchmaking"
-            description="Smart algorithms analyze compatibility to find your perfect match."
-            highlight
-          />
-          <FeatureCard
-            icon={<MessageCircle className="w-6 h-6" />}
-            title="AI Chat Suggestions"
-            description="Get intelligent conversation starters and message ideas."
-          />
-          <FeatureCard
-            icon={<Shield className="w-6 h-6" />}
-            title="Safe & Secure"
-            description="All profiles verified. Your privacy is our top priority."
-          />
-        </motion.div>
+       
 
         {/* App Preview Cards */}
         <motion.div
@@ -162,9 +132,14 @@ const HeroSection = () => {
           className="mt-24 flex justify-center gap-4"
         >
           <div className="w-48 h-80 rounded-2xl bg-card border-2 border-foreground shadow-[6px_6px_0px_0px_hsl(var(--foreground))] overflow-hidden -rotate-6">
-            <div className="h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-end p-4">
+            <div className="h-full bg-gradient-to-br bg-cover from-primary/20 to-secondary/20 flex items-end p-4"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1610657963830-e4064e049615?w=1600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8d29tYW4lMjBwb3J0cmFpdHN8ZW58MHx8MHx8fDA%3D')",
+            }}
+            >
               <div>
-                <p className="font-bold text-foreground">Sarah, 26</p>
+                <p className="font-bold text-white text-foreground">Sarah, 26</p>
                 <p className="text-sm text-muted-foreground">2 miles away</p>
               </div>
             </div>
@@ -174,9 +149,14 @@ const HeroSection = () => {
               <span className="text-sm font-medium">DISCOVER</span>
               <Sparkles className="w-4 h-4" />
             </div>
-            <div className="h-64 bg-gradient-to-br from-primary/10 to-secondary/10 flex items-end p-4">
+            <div className="h-64 bg-gradient-to-br bg-cover from-primary/10 to-secondary/10 flex items-end p-4" 
+             style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1626576352171-211d1cc5ec73?w=1600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHdvbWFuJTIwcG9ydHJhaXRzfGVufDB8fDB8fHww')",
+            }}
+            >
               <div>
-                <p className="font-bold text-foreground text-lg">Emma, 28</p>
+                <p className="font-bold text-white text-foreground text-lg">Emma, 28</p>
                 <p className="text-sm text-muted-foreground">98% Match</p>
               </div>
             </div>
@@ -190,9 +170,14 @@ const HeroSection = () => {
             </div>
           </div>
           <div className="w-48 h-80 rounded-2xl bg-card border-2 border-foreground shadow-[6px_6px_0px_0px_hsl(var(--foreground))] overflow-hidden rotate-6">
-            <div className="h-full bg-gradient-to-br from-secondary/20 to-primary/20 flex items-end p-4">
+            <div className="h-full bg-gradient-to-br bg-cover from-secondary/20 to-primary/20 flex items-end p-4"
+            style={{
+              backgroundImage:
+                "url('https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b?w=1600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Ym95JTIwcG9ydHJhaXR8ZW58MHx8MHx8fDA%3D')",
+            }}
+            >
               <div>
-                <p className="font-bold text-foreground">Mike, 29</p>
+                <p className="font-bold text-white text-foreground">Mike, 29</p>
                 <p className="text-sm text-muted-foreground">5 miles away</p>
               </div>
             </div>

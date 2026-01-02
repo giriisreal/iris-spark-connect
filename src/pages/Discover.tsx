@@ -450,7 +450,7 @@ const Discover = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-12 md:py-20 bg-card rounded-2xl border-2 border-foreground shadow-[4px_4px_0px_0px_hsl(var(--foreground))] p-6 md:p-8"
               >
-                <Sparkles className="w-12 h-12 md:w-16 md:h-16 text-primary mx-auto mb-4" />
+               
                 <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">No more profiles</h3>
                 <p className="text-muted-foreground text-sm md:text-base mb-4">Check back later for more matches!</p>
                 <Button variant="hero" onClick={fetchProfiles}>

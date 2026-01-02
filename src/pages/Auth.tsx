@@ -154,12 +154,7 @@ const Auth = () => {
                 transition={{ duration: 0.2 }}
               >
                 {/* Icon */}
-                <motion.div 
-                  className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Sparkles className="w-8 h-8 text-primary-foreground" />
-                </motion.div>
+                
 
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -264,7 +259,7 @@ const Auth = () => {
           >
             {[
               { icon: Shield, label: 'Secure', color: 'text-primary' },
-              { icon: Users, label: '2M+ Users', color: 'text-secondary' },
+              { icon: Users, label: 'Trusted by many', color: 'text-secondary' },
               { icon: Sparkles, label: '4.8 Rating', color: 'text-primary' },
             ].map((badge, index) => (
               <motion.div
