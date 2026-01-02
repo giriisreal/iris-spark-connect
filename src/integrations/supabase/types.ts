@@ -50,6 +50,72 @@ export type Database = {
           },
         ]
       }
+      communities: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          member_count: number | null
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          member_count?: number | null
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          member_count?: number | null
+          name?: string
+        }
+        Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string
+          profile_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string
+          profile_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           created_at: string
@@ -128,6 +194,47 @@ export type Database = {
           },
         ]
       }
+      mini_games: {
+        Row: {
+          compatibility_bonus: number | null
+          completed_at: string | null
+          created_at: string
+          game_type: string
+          id: string
+          match_id: string
+          player1_answers: Json | null
+          player2_answers: Json | null
+        }
+        Insert: {
+          compatibility_bonus?: number | null
+          completed_at?: string | null
+          created_at?: string
+          game_type: string
+          id?: string
+          match_id: string
+          player1_answers?: Json | null
+          player2_answers?: Json | null
+        }
+        Update: {
+          compatibility_bonus?: number | null
+          completed_at?: string | null
+          created_at?: string
+          game_type?: string
+          id?: string
+          match_id?: string
+          player1_answers?: Json | null
+          player2_answers?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mini_games_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_photos: {
         Row: {
           created_at: string
@@ -167,10 +274,15 @@ export type Database = {
         Row: {
           age: number
           bio: string | null
+          boundaries: string[] | null
           city: string | null
+          comfort_tags: string[] | null
           compatibility_data: Json | null
           created_at: string
+          dating_mode: string | null
+          energy_preferences: Json | null
           gender: string
+          hide_photos_until_message: number | null
           id: string
           interests: string[] | null
           location_lat: number | null
@@ -180,16 +292,26 @@ export type Database = {
           max_distance: number | null
           min_age: number | null
           name: string
+          non_negotiables: string[] | null
+          profile_theme: string | null
+          pronouns: string | null
           updated_at: string
           user_id: string
+          vibe_status: string | null
+          voice_intro_url: string | null
         }
         Insert: {
           age: number
           bio?: string | null
+          boundaries?: string[] | null
           city?: string | null
+          comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string
+          dating_mode?: string | null
+          energy_preferences?: Json | null
           gender: string
+          hide_photos_until_message?: number | null
           id?: string
           interests?: string[] | null
           location_lat?: number | null
@@ -199,16 +321,26 @@ export type Database = {
           max_distance?: number | null
           min_age?: number | null
           name: string
+          non_negotiables?: string[] | null
+          profile_theme?: string | null
+          pronouns?: string | null
           updated_at?: string
           user_id: string
+          vibe_status?: string | null
+          voice_intro_url?: string | null
         }
         Update: {
           age?: number
           bio?: string | null
+          boundaries?: string[] | null
           city?: string | null
+          comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string
+          dating_mode?: string | null
+          energy_preferences?: Json | null
           gender?: string
+          hide_photos_until_message?: number | null
           id?: string
           interests?: string[] | null
           location_lat?: number | null
@@ -218,10 +350,57 @@ export type Database = {
           max_distance?: number | null
           min_age?: number | null
           name?: string
+          non_negotiables?: string[] | null
+          profile_theme?: string | null
+          pronouns?: string | null
           updated_at?: string
           user_id?: string
+          vibe_status?: string | null
+          voice_intro_url?: string | null
         }
         Relationships: []
+      }
+      safety_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_id?: string
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_reports_reported_id_fkey"
+            columns: ["reported_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       swipes: {
         Row: {
@@ -256,6 +435,38 @@ export type Database = {
           {
             foreignKeyName: "swipes_swiper_id_fkey"
             columns: ["swiper_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_intros: {
+        Row: {
+          audio_url: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          profile_id: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          profile_id: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_intros_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

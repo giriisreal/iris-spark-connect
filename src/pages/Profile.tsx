@@ -10,10 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, User, LogOut, Camera, Trash2, MapPin, Loader2, Save, Image, Star } from 'lucide-react';
+import { ArrowLeft, User, LogOut, Camera, Trash2, MapPin, Loader2, Save, Image, Star, Users, Zap, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
+import VibeSelector from '@/components/VibeSelector';
+import DatingModeSelector from '@/components/DatingModeSelector';
+import CommunityList from '@/components/CommunityList';
 
 const MAX_PHOTOS = 6;
 
