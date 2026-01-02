@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Heart, Sparkles, MessageCircle, Volume2, Shield, Users, Zap, Music, Gamepad2, BookOpen, Mic } from 'lucide-react';
+import { X, MapPin, Heart, Sparkles, MessageCircle, Volume2, Shield, Users, Zap, Music, Gamepad2, BookOpen, Mic, Quote, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfilePhoto } from '@/hooks/useProfile';
 import { useState } from 'react';
@@ -21,6 +21,8 @@ interface UserProfileViewProps {
     pronouns?: string;
     nonNegotiables?: string[];
     voiceIntroUrl?: string;
+    pickupLines?: string[];
+    personalNotes?: string[];
     energyPreferences?: {
       humor: number;
       music: number;
@@ -288,6 +290,50 @@ const UserProfileView = ({ profile, onClose, onLike, onDislike, showActions = tr
                     >
                       {item}
                     </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pickup Lines */}
+            {profile.pickupLines && profile.pickupLines.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <Quote className="w-5 h-5 text-accent" /> My Pickup Lines
+                </h3>
+                <div className="space-y-2">
+                  {profile.pickupLines.map((line, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="p-3 rounded-xl bg-accent/10 border-2 border-accent/30 italic text-foreground"
+                    >
+                      "{line}"
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Personal Notes */}
+            {profile.personalNotes && profile.personalNotes.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <StickyNote className="w-5 h-5 text-secondary" /> About Me Notes
+                </h3>
+                <div className="grid grid-cols-1 gap-2">
+                  {profile.personalNotes.map((note, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="p-3 rounded-lg bg-secondary/20 border-2 border-secondary/30 text-foreground text-sm"
+                    >
+                      📝 {note}
+                    </motion.div>
                   ))}
                 </div>
               </div>
