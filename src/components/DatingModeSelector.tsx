@@ -1,10 +1,6 @@
 import { motion } from 'framer-motion';
 import { Heart, Users, Clock, Eye } from 'lucide-react';
-
-interface DatingModeSelectorProps {
-  selectedMode: string;
-  onModeChange: (mode: string) => void;
-}
+import { useProfile } from '@/hooks/useProfile';
 
 const modes = [
   { 
@@ -37,7 +33,15 @@ const modes = [
   },
 ];
 
-const DatingModeSelector = ({ selectedMode, onModeChange }: DatingModeSelectorProps) => {
+const DatingModeSelector = () => {
+  const { profile, updateProfile, fetchProfile } = useProfile();
+  const selectedMode = profile?.dating_mode || 'dating';
+
+  const handleModeChange = async (mode: string) => {
+    await updateProfile({ dating_mode: mode });
+    fetchProfile();
+  };
+
   return (
     <div className="space-y-3">
       <h3 className="font-bold text-foreground flex items-center gap-2">
@@ -47,7 +51,7 @@ const DatingModeSelector = ({ selectedMode, onModeChange }: DatingModeSelectorPr
         {modes.map((mode) => (
           <motion.button
             key={mode.id}
-            onClick={() => onModeChange(mode.id)}
+            onClick={() => handleModeChange(mode.id)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
