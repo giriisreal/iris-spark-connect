@@ -19,6 +19,20 @@ export interface Profile {
   interests: string[];
   created_at: string;
   updated_at: string;
+  vibe_status: string | null;
+  dating_mode: string | null;
+  pronouns: string | null;
+  voice_intro_url: string | null;
+  energy_preferences: any;
+  non_negotiables: string[] | null;
+  boundaries: string[] | null;
+  comfort_tags: string[] | null;
+  profile_theme: string | null;
+  hide_photos_until_message: number | null;
+  break_mode_until: string | null;
+  session_start_time: string | null;
+  daily_usage_minutes: number | null;
+  social_links: any;
 }
 
 export interface ProfilePhoto {
@@ -59,9 +73,8 @@ export const useProfile = () => {
     if (error) {
       console.error('Error fetching profile:', error);
     } else if (profileData) {
-      setProfile(profileData as Profile);
+      setProfile(profileData as unknown as Profile);
       
-      // Fetch photos
       const { data: photosData } = await supabase
         .from('profile_photos')
         .select('*')
@@ -94,7 +107,7 @@ export const useProfile = () => {
       .single();
 
     if (data) {
-      setProfile(data as Profile);
+      setProfile(data as unknown as Profile);
     }
 
     return { data, error };
@@ -111,7 +124,7 @@ export const useProfile = () => {
       .single();
 
     if (data) {
-      setProfile(data as Profile);
+      setProfile(data as unknown as Profile);
     }
 
     return { data, error };
