@@ -5,9 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, Users, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import logo from '@/assets/logo.png';
 
 const emailSchema = z.string().email('Please enter a valid email');
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -79,7 +80,7 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: 'Welcome to IRIS! 💜',
+            title: 'Welcome to IRIS! 🌿',
             description: 'Account created successfully. Let\'s set up your profile!',
           });
           navigate('/onboarding');
@@ -102,25 +103,48 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex flex-col">
+    <div className="min-h-screen bg-gradient-hero flex flex-col relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute top-20 -left-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3] 
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute bottom-20 -right-20 w-80 h-80 rounded-full bg-secondary/10 blur-3xl"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            opacity: [0.3, 0.5, 0.3] 
+          }}
+          transition={{ duration: 8, repeat: Infinity, delay: 1 }}
+        />
+      </div>
+
       {/* Header */}
-      <nav className="p-4">
-        <Link to="/" className="flex items-center gap-2 w-fit">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-            <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
-          </div>
-          <span className="text-2xl font-bold text-foreground">IRIS</span>
+      <nav className="p-4 relative z-10">
+        <Link to="/" className="flex items-center gap-3 w-fit group">
+          <motion.div 
+            whileHover={{ rotate: 10 }}
+            className="w-12 h-12 rounded-2xl overflow-hidden shadow-md"
+          >
+            <img src={logo} alt="IRIS" className="w-full h-full object-cover" />
+          </motion.div>
+          <span className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">IRIS</span>
         </Link>
       </nav>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <div className="bg-card rounded-3xl shadow-elevated p-8 border border-border">
+          <div className="bg-card rounded-3xl shadow-elevated p-8 border-2 border-primary/20 backdrop-blur-sm">
             <AnimatePresence mode="wait">
               <motion.div
                 key={isSignUp ? 'signup' : 'signin'}
@@ -129,6 +153,14 @@ const Auth = () => {
                 exit={{ opacity: 0, x: isSignUp ? -20 : 20 }}
                 transition={{ duration: 0.2 }}
               >
+                {/* Icon */}
+                <motion.div 
+                  className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <Sparkles className="w-8 h-8 text-primary-foreground" />
+                </motion.div>
+
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-bold text-foreground mb-2">
                     {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -142,7 +174,7 @@ const Auth = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
@@ -151,16 +183,22 @@ const Auth = () => {
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-12"
+                        className="pl-12 h-12 rounded-xl border-2 border-border focus:border-primary transition-colors"
                       />
                     </div>
                     {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
+                      <motion.p 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-destructive"
+                      >
+                        {errors.email}
+                      </motion.p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                       <Input
@@ -169,11 +207,17 @@ const Auth = () => {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-12"
+                        className="pl-12 h-12 rounded-xl border-2 border-border focus:border-primary transition-colors"
                       />
                     </div>
                     {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                      <motion.p 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-destructive"
+                      >
+                        {errors.password}
+                      </motion.p>
                     )}
                   </div>
 
@@ -181,7 +225,7 @@ const Auth = () => {
                     type="submit"
                     variant="hero"
                     size="lg"
-                    className="w-full"
+                    className="w-full h-12 text-base"
                     disabled={loading}
                   >
                     {loading ? (
@@ -216,11 +260,24 @@ const Auth = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 flex items-center justify-center gap-6 text-muted-foreground text-sm"
+            className="mt-8 grid grid-cols-3 gap-4"
           >
-            <span>🔒 Secure</span>
-            <span>💜 2M+ Users</span>
-            <span>⭐ 4.8 Rating</span>
+            {[
+              { icon: Shield, label: 'Secure', color: 'text-primary' },
+              { icon: Users, label: '2M+ Users', color: 'text-secondary' },
+              { icon: Sparkles, label: '4.8 Rating', color: 'text-primary' },
+            ].map((badge, index) => (
+              <motion.div
+                key={badge.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl bg-card/50 backdrop-blur-sm"
+              >
+                <badge.icon className={`w-5 h-5 ${badge.color}`} />
+                <span className="text-xs text-muted-foreground font-medium">{badge.label}</span>
+              </motion.div>
+            ))}
           </motion.div>
         </motion.div>
       </div>
