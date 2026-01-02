@@ -116,6 +116,41 @@ export type Database = {
           },
         ]
       }
+      daily_updates: {
+        Row: {
+          caption: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          photo_url: string
+          profile_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          photo_url: string
+          profile_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          photo_url?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_updates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_sessions: {
         Row: {
           created_at: string
@@ -351,6 +386,8 @@ export type Database = {
           min_age: number | null
           name: string
           non_negotiables: string[] | null
+          personal_notes: string[] | null
+          pickup_lines: string[] | null
           profile_theme: string | null
           pronouns: string | null
           session_start_time: string | null
@@ -384,6 +421,8 @@ export type Database = {
           min_age?: number | null
           name: string
           non_negotiables?: string[] | null
+          personal_notes?: string[] | null
+          pickup_lines?: string[] | null
           profile_theme?: string | null
           pronouns?: string | null
           session_start_time?: string | null
@@ -417,6 +456,8 @@ export type Database = {
           min_age?: number | null
           name?: string
           non_negotiables?: string[] | null
+          personal_notes?: string[] | null
+          pickup_lines?: string[] | null
           profile_theme?: string | null
           pronouns?: string | null
           session_start_time?: string | null

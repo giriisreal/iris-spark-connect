@@ -33,6 +33,8 @@ export interface Profile {
   session_start_time: string | null;
   daily_usage_minutes: number | null;
   social_links: any;
+  pickup_lines: string[] | null;
+  personal_notes: string[] | null;
 }
 
 export interface ProfilePhoto {
