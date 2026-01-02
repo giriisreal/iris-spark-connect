@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +29,7 @@ interface OtherProfile {
   non_negotiables: string[] | null;
   pickup_lines: string[] | null;
   personal_notes: string[] | null;
+  voice_intro_url: string | null;
   photos: { id: string; photo_url: string; is_primary: boolean | null; order_index: number | null; profile_id: string; created_at: string }[];
 }
 
@@ -44,6 +45,7 @@ const Chat = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const suggestionsTimerRef = useRef<number | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -69,7 +71,7 @@ const Chat = () => {
 
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('id, name, age, bio, city, interests, vibe_status, non_negotiables, pickup_lines, personal_notes')
+          .select('id, name, age, bio, city, interests, vibe_status, non_negotiables, pickup_lines, personal_notes, voice_intro_url')
           .eq('id', otherProfileId)
           .single();
 
@@ -101,9 +103,9 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const fetchSuggestions = async () => {
-    if (!otherProfile) return;
-    
+  const fetchSuggestions = useCallback(async () => {
+    if (!otherProfile || !profile) return;
+
     setLoadingSuggestions(true);
     try {
       const { data, error } = await supabase.functions.invoke('ai-suggestions', {
@@ -114,21 +116,63 @@ const Chat = () => {
             interests: otherProfile.interests,
             bio: otherProfile.bio,
           },
-          messages: messages.slice(-5).map(m => ({
-            role: m.sender_id === profile?.id ? 'user' : 'assistant',
+          messages: messages.slice(-6).map((m) => ({
+            role: m.sender_id === profile.id ? 'user' : 'assistant',
             content: m.content,
           })),
         },
       });
 
-      if (!error && data?.suggestions) {
+      if (error) {
+        console.error('AI suggestions error:', error);
+        toast({
+          title: 'AI suggestions failed',
+          description: 'Please try again in a moment.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data?.suggestions?.length) {
         setSuggestions(data.suggestions);
+      } else {
+        setSuggestions([]);
       }
     } catch (err) {
       console.error('Failed to get suggestions:', err);
+      toast({
+        title: 'AI suggestions failed',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingSuggestions(false);
     }
-    setLoadingSuggestions(false);
-  };
+  }, [messages, otherProfile, profile, toast]);
+
+  // Auto-generate smart replies when the other person sends a message (LinkedIn-style)
+  useEffect(() => {
+    if (!otherProfile || !profile) return;
+    if (newMessage.trim().length > 0) return;
+
+    const last = messages[messages.length - 1];
+    if (!last) return;
+    if (last.sender_id === profile.id) return;
+
+    if (suggestionsTimerRef.current) {
+      window.clearTimeout(suggestionsTimerRef.current);
+    }
+
+    suggestionsTimerRef.current = window.setTimeout(() => {
+      fetchSuggestions();
+    }, 600);
+
+    return () => {
+      if (suggestionsTimerRef.current) {
+        window.clearTimeout(suggestionsTimerRef.current);
+      }
+    };
+  }, [messages, otherProfile, profile, newMessage, fetchSuggestions]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,7 +180,7 @@ const Chat = () => {
 
     setSending(true);
     const { error } = await sendMessage(newMessage);
-    
+
     if (!error) {
       setNewMessage('');
       setSuggestions([]);
@@ -171,7 +215,7 @@ const Chat = () => {
     navigate('/matches');
   };
 
-  const primaryPhoto = otherProfile?.photos?.find(p => p.is_primary) || otherProfile?.photos?.[0];
+  const primaryPhoto = otherProfile?.photos?.find((p) => p.is_primary) || otherProfile?.photos?.[0];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -180,14 +224,14 @@ const Chat = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/matches')}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        
+
         {otherProfile && (
-          <button 
+          <button
             className="flex items-center gap-3 flex-1"
             onClick={() => setShowProfile(true)}
           >
             {primaryPhoto ? (
-              <img 
+              <img
                 src={primaryPhoto.photo_url}
                 alt={otherProfile.name}
                 className="w-10 h-10 rounded-full object-cover border-2 border-foreground"
@@ -218,7 +262,7 @@ const Chat = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>
-      
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading ? (
@@ -244,7 +288,7 @@ const Chat = () => {
         ) : (
           messages.map((message, index) => {
             const isOwn = message.sender_id === profile?.id;
-            
+
             return (
               <motion.div
                 key={message.id}
@@ -253,10 +297,10 @@ const Chat = () => {
                 transition={{ delay: index * 0.02 }}
                 className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
-                <div 
+                <div
                   className={`max-w-[75%] rounded-xl px-4 py-2 border-2 border-foreground ${
-                    isOwn 
-                      ? 'bg-primary text-primary-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]' 
+                    isOwn
+                      ? 'bg-primary text-primary-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]'
                       : 'bg-card text-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]'
                   }`}
                 >
@@ -273,19 +317,19 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* AI Suggestions */}
+      {/* Smart Replies */}
       <AnimatePresence>
         {suggestions.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            exit={{ opacity: 0, y: 12 }}
             className="px-4 pb-2"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-primary flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                AI Suggestions
+                Smart replies
               </span>
               <button onClick={() => setSuggestions([])} className="text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
@@ -296,7 +340,7 @@ const Chat = () => {
                 <button
                   key={idx}
                   onClick={() => handleUseSuggestion(suggestion)}
-                  className="px-3 py-2 rounded-lg bg-card border-2 border-primary text-sm text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="px-3 py-2 rounded-full bg-card border-2 border-primary text-sm text-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -309,9 +353,9 @@ const Chat = () => {
       {/* Input */}
       <form onSubmit={handleSend} className="p-4 border-t-2 border-foreground bg-card">
         <div className="flex items-center gap-2 max-w-md mx-auto">
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             size="icon"
             onClick={fetchSuggestions}
             disabled={loadingSuggestions}
@@ -330,9 +374,9 @@ const Chat = () => {
             className="flex-1 border-2 border-foreground"
             disabled={sending}
           />
-          <Button 
-            type="submit" 
-            variant="hero" 
+          <Button
+            type="submit"
+            variant="hero"
             size="icon"
             disabled={!newMessage.trim() || sending}
           >
@@ -356,6 +400,7 @@ const Chat = () => {
               nonNegotiables: otherProfile.non_negotiables || undefined,
               pickupLines: otherProfile.pickup_lines || undefined,
               personalNotes: otherProfile.personal_notes || undefined,
+              voiceIntroUrl: otherProfile.voice_intro_url || undefined,
             }}
             onClose={() => setShowProfile(false)}
             showActions={false}

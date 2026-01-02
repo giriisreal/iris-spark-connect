@@ -28,6 +28,7 @@ interface DiscoverProfile {
   nonNegotiables?: string[];
   pickupLines?: string[];
   personalNotes?: string[];
+  voiceIntroUrl?: string;
 }
 
 const SWIPE_THRESHOLD = 100;
@@ -83,7 +84,7 @@ const Discover = () => {
     
     let query = supabase
       .from('profiles')
-      .select('id, name, age, bio, city, interests, location_lat, location_lng, vibe_status, non_negotiables, pickup_lines, personal_notes')
+      .select('id, name, age, bio, city, interests, location_lat, location_lng, vibe_status, non_negotiables, pickup_lines, personal_notes, voice_intro_url')
       .neq('id', profile.id);
 
     if (profile.looking_for && profile.looking_for.length > 0) {
@@ -127,6 +128,7 @@ const Discover = () => {
             nonNegotiables: p.non_negotiables || undefined,
             pickupLines: p.pickup_lines || undefined,
             personalNotes: p.personal_notes || undefined,
+            voiceIntroUrl: p.voice_intro_url || undefined,
           };
         });
 

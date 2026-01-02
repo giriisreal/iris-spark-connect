@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StickyNote, Plus, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,19 +10,27 @@ const MAX_NOTES = 5;
 
 const PersonalNotesEditor = () => {
   const { profile, updateProfile, fetchProfile } = useProfile();
-  const [notes, setNotes] = useState<string[]>(profile?.personal_notes || []);
+  const [notes, setNotes] = useState<string[]>([]);
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    setNotes(profile?.personal_notes ?? []);
+  }, [profile?.personal_notes]);
+
   const handleAddNote = async () => {
+    if (!profile) {
+      toast({ title: 'Profile not loaded yet', variant: 'destructive' });
+      return;
+    }
     if (!newNote.trim() || notes.length >= MAX_NOTES) return;
-    
+
     setSaving(true);
     const updatedNotes = [...notes, newNote.trim()];
     const { error } = await updateProfile({ personal_notes: updatedNotes });
-    
+
     if (!error) {
       setNotes(updatedNotes);
       setNewNote('');
@@ -35,9 +43,10 @@ const PersonalNotesEditor = () => {
   };
 
   const handleRemoveNote = async (index: number) => {
+    if (!profile) return;
     const updatedNotes = notes.filter((_, i) => i !== index);
     const { error } = await updateProfile({ personal_notes: updatedNotes });
-    
+
     if (!error) {
       setNotes(updatedNotes);
       fetchProfile();
