@@ -473,7 +473,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="p-4 flex items-center justify-center">
-        <img src={logo} alt="IRIS" className="h-10 object-contain" />
+        <img src={logo} alt="IRIS" className="h-14 object-contain" />
       </div>
 
       {/* Progress Bar */}
