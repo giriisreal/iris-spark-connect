@@ -40,7 +40,7 @@ const IrisAI = () => {
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Hi! I'm IRIS, your AI matchmaking assistant. Tell me what you're looking for, like:\n\n\"Find me a creative woman under 28 in Mumbai\"\n\"Show me guys who love hiking and are into tech\"\n\"I want someone artistic in Bangalore\"",
+      content: "Hi! I'm Bud, your AI matchmaking assistant. Tell me what you're looking for, like:\n\n\"Find me a creative woman under 28 in Mumbai\"\n\"Show me guys who love hiking and are into tech\"\n\"I want someone artistic in Bangalore\"",
       timestamp: new Date()
     }
   ]);
@@ -190,7 +190,7 @@ const IrisAI = () => {
             <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-bold text-foreground">IRIS AI</h1>
+            <h1 className="font-bold text-foreground">Bud AI</h1>
             <p className="text-xs text-muted-foreground">Your AI Matchmaker</p>
           </div>
         </div>

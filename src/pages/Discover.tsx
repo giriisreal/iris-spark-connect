@@ -253,7 +253,7 @@ const Discover = () => {
   className="w-10 h-10 md:w-12 md:h-12 object-contain"
 />
 <span className="text-lg md:text-xl font-bold text-foreground">
-  IRIS
+  
 </span>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
@@ -262,7 +262,7 @@ const Discover = () => {
             size="icon" 
             onClick={() => navigate('/iris')}
             className="relative"
-            title="IRIS AI Matchmaker"
+            title="Bud AI Matchmaker"
           >
             <Sparkles className="w-5 h-5 text-primary" />
           </Button>

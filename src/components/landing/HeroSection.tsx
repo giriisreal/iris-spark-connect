@@ -33,7 +33,7 @@ const HeroSection = () => {
               className="w-12 h-12 object-contain"
             />
             <span className="text-2xl font-bold text-foreground">
-              IRIS
+              
             </span>
           </motion.div>
 
