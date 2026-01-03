@@ -1,7 +1,10 @@
 project_id = "vdgzmaghzzqveeoqwoks"
 
 [functions.compatibility-score]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-suggestions]
-verify_jwt = true
+verify_jwt = false
+
+[functions.iris-ai]
+verify_jwt = false

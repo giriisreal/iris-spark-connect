@@ -129,7 +129,7 @@ const Auth = () => {
         <Link to="/" className="flex items-center gap-3 w-fit group">
           <motion.div 
             whileHover={{ rotate: 10 }}
-            className="w-12 h-12 rounded-2xl overflow-hidden shadow-md"
+            className="w-16 h-16 rounded-2xl overflow-hidden shadow-md"
           >
             <img src={logo} alt="IRIS" className="w-full h-full object-cover" />
           </motion.div>

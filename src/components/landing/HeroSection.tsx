@@ -23,8 +23,13 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
+<<<<<<< HEAD
             <img src={logo} alt="IRIS" className="w-10 h-10 object-contain" />
             <span className="text-2xl font-bold text-foreground"></span>
+=======
+            <img src={logo} alt="IRIS" className="w-14 h-14 object-contain" />
+            <span className="text-2xl font-bold text-foreground">IRIS</span>
+>>>>>>> 8c34c6ed637302bfefca9d2c3a39b274597018f7
           </motion.div>
           
           <motion.div
@@ -124,12 +129,12 @@ const HeroSection = () => {
 
        
 
-        {/* App Preview Cards */}
+        {/* App Preview Cards - Hidden on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-24 flex justify-center gap-4"
+          className="mt-24 hidden md:flex justify-center gap-4"
         >
           <div className="w-48 h-80 rounded-2xl bg-card border-2 border-foreground shadow-[6px_6px_0px_0px_hsl(var(--foreground))] overflow-hidden -rotate-6">
             <div className="h-full bg-gradient-to-br bg-cover from-primary/20 to-secondary/20 flex items-end p-4"
