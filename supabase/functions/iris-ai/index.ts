@@ -6,222 +6,205 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type Criteria = {
+  gender: "male" | "female" | "non-binary" | "other" | null;
+  maxAge: number | null;
+  minAge: number | null;
+  city: string | null;
+  interests: string[] | null;
+  keywords: string[];
+  response: string;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, userId } = await req.json();
-    console.log("Received message:", message, "userId:", userId);
-    
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // Auth (verify inside the function; platform JWT verification is disabled)
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error("Backend configuration missing");
     }
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("Supabase configuration missing");
-      throw new Error("Supabase configuration missing");
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: userData, error: authError } = await authClient.auth.getUser();
+    if (authError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const userId = userData.user.id;
+    const { message } = await req.json();
 
-    // Get the user's profile to exclude from results
-    const { data: userProfile, error: userError } = await supabase
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return new Response(JSON.stringify({ error: "Message is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch the user's profile (RLS-safe; profiles are readable)
+    const { data: userProfile } = await authClient
       .from("profiles")
-      .select("id, gender, looking_for")
+      .select("id, name, age, gender, bio, city, interests, looking_for")
       .eq("user_id", userId)
-      .single();
-
-    if (userError) {
-      console.error("User profile error:", userError);
-    }
+      .maybeSingle();
 
     if (!userProfile) {
-      console.log("User profile not found for userId:", userId);
       return new Response(
-        JSON.stringify({ error: "User profile not found. Please complete your profile first." }),
+        JSON.stringify({ error: "User profile not found. Please complete onboarding first." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("User profile found:", userProfile.id);
+    // --- Parse criteria (AI) ---
+    // Keep this call small to conserve credits.
+    let criteria: Criteria = {
+      gender: null,
+      maxAge: null,
+      minAge: null,
+      city: null,
+      interests: null,
+      keywords: ["match"],
+      response: "Searching profiles...",
+    };
 
-    // Use AI to parse the user's query and extract search criteria
-    const parseResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: `You are IRIS AI, a friendly matchmaking assistant. Parse the user's dating preference request and extract search criteria.
+    if (LOVABLE_API_KEY) {
+      const parseResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-lite",
+          max_tokens: 220,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are IRIS AI. Output ONLY valid JSON. Schema: {gender:male|female|non-binary|other|null, maxAge:number|null, minAge:number|null, city:string|null, interests:string[]|null, keywords:string[], response:string}. Always include 3-8 keywords.",
+            },
+            {
+              role: "user",
+              content: `User request: ${message}\nUser's looking_for: ${(userProfile.looking_for || []).join(", ")}`,
+            },
+          ],
+        }),
+      });
 
-You MUST respond with ONLY a valid JSON object, no other text. The JSON should have these fields (use null for unspecified):
-- gender: "male", "female", "non-binary", "other", or null
-- maxAge: number or null
-- minAge: number or null  
-- city: string or null (normalize city names, e.g., "Bangalore" not "Bengaluru")
-- interests: array of strings or null (e.g., ["finance", "tech", "music"])
-- keywords: array of strings for bio/interest matching (always include at least one keyword based on the query)
-- response: a friendly conversational message about what you're searching for
-
-Example input: "Find me a finance nerd, woman under 25 in Bangalore"
-Example response (ONLY JSON, nothing else):
-{"gender":"female","maxAge":25,"minAge":null,"city":"Bangalore","interests":["finance"],"keywords":["finance","nerd","investment","stocks"],"response":"Looking for finance-savvy women under 25 in Bangalore! Let me find some great matches for you..."}
-
-Example input: "Show me a tech nerd"
-Example response:
-{"gender":null,"maxAge":null,"minAge":null,"city":null,"interests":["tech","technology"],"keywords":["tech","nerd","programming","coding","software","developer"],"response":"Searching for tech enthusiasts! Let me find some great matches..."}`
-          },
-          { role: "user", content: message }
-        ]
-      }),
-    });
-
-    console.log("AI response status:", parseResponse.status);
-
-    if (!parseResponse.ok) {
-      const errorText = await parseResponse.text();
-      console.error("AI parse error:", parseResponse.status, errorText);
-      
-      if (parseResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (parseResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error("Failed to parse search criteria");
-    }
-
-    const parseData = await parseResponse.json();
-    console.log("AI response data:", JSON.stringify(parseData));
-    
-    let criteria;
-    
-    try {
-      const content = parseData.choices?.[0]?.message?.content || "";
-      console.log("AI content:", content);
-      
-      // Try to extract JSON from the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        criteria = JSON.parse(jsonMatch[0]);
+      if (!parseResponse.ok) {
+        if (parseResponse.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (parseResponse.status === 402) {
+          return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       } else {
-        criteria = { 
-          keywords: [message.toLowerCase()], 
-          response: "Let me search for profiles matching your preferences..." 
-        };
-      }
-    } catch (e) {
-      console.error("Error parsing AI response:", e);
-      criteria = { 
-        keywords: [message.toLowerCase()], 
-        response: "I'll help you find matches! Let me search..." 
-      };
-    }
-
-    console.log("Parsed criteria:", JSON.stringify(criteria));
-
-    // Build the Supabase query
-    let query = supabase
-      .from("profiles")
-      .select(`
-        id, name, age, bio, city, gender, interests, vibe_status, 
-        non_negotiables, pickup_lines, personal_notes
-      `)
-      .neq("id", userProfile.id)
-      .limit(10);
-
-    // Apply filters based on parsed criteria
-    if (criteria.gender) {
-      query = query.eq("gender", criteria.gender);
-    }
-    if (criteria.maxAge) {
-      query = query.lte("age", criteria.maxAge);
-    }
-    if (criteria.minAge) {
-      query = query.gte("age", criteria.minAge);
-    }
-    if (criteria.city) {
-      query = query.ilike("city", `%${criteria.city}%`);
-    }
-
-    const { data: profiles, error: profilesError } = await query;
-
-    if (profilesError) {
-      console.error("Profiles query error:", profilesError);
-      throw new Error("Failed to fetch profiles");
-    }
-
-    console.log("Found profiles:", profiles?.length || 0);
-
-    // Fetch photos for the matched profiles
-    const profileIds = profiles?.map(p => p.id) || [];
-    let photosMap: Record<string, string> = {};
-    
-    if (profileIds.length > 0) {
-      const { data: photos } = await supabase
-        .from("profile_photos")
-        .select("profile_id, photo_url, is_primary")
-        .in("profile_id", profileIds);
-      
-      if (photos) {
-        for (const photo of photos) {
-          if (!photosMap[photo.profile_id] || photo.is_primary) {
-            photosMap[photo.profile_id] = photo.photo_url;
+        const parseData = await parseResponse.json();
+        const content = parseData.choices?.[0]?.message?.content || "";
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            criteria = {
+              gender: parsed.gender ?? null,
+              maxAge: typeof parsed.maxAge === "number" ? parsed.maxAge : null,
+              minAge: typeof parsed.minAge === "number" ? parsed.minAge : null,
+              city: parsed.city ?? null,
+              interests: Array.isArray(parsed.interests) ? parsed.interests : null,
+              keywords: Array.isArray(parsed.keywords) ? parsed.keywords : ["match"],
+              response: typeof parsed.response === "string" ? parsed.response : "Searching profiles...",
+            };
           }
+        } catch {
+          // leave default criteria
         }
       }
     }
 
-    // Score and filter profiles based on keywords in bio/interests
-    const scoredProfiles = (profiles || []).map(profile => {
-      let score = 0;
-      const bioLower = (profile.bio || "").toLowerCase();
-      const interestsLower = (profile.interests || []).map((i: string) => i.toLowerCase());
-      
-      for (const keyword of criteria.keywords || []) {
-        const kw = keyword.toLowerCase();
-        if (bioLower.includes(kw)) score += 2;
-        if (interestsLower.some((i: string) => i.includes(kw))) score += 3;
-      }
-      
-      return { 
-        ...profile, 
-        score,
-        photoUrl: photosMap[profile.id] || null
-      };
-    }).sort((a, b) => b.score - a.score).slice(0, 5);
+    // --- Fetch candidate profiles ---
+    let query = authClient
+      .from("profiles")
+      .select("id, name, age, bio, city, gender, interests, vibe_status, non_negotiables, pickup_lines, personal_notes")
+      .neq("id", userProfile.id)
+      .limit(30);
 
-    console.log("Returning profiles:", scoredProfiles.length);
+    if (criteria.gender) query = query.eq("gender", criteria.gender);
+    if (criteria.maxAge) query = query.lte("age", criteria.maxAge);
+    if (criteria.minAge) query = query.gte("age", criteria.minAge);
+    if (criteria.city) query = query.ilike("city", `%${criteria.city}%`);
+
+    const { data: profiles } = await query;
+
+    // Photos
+    const profileIds = (profiles || []).map((p) => p.id);
+    const photosMap: Record<string, string> = {};
+
+    if (profileIds.length > 0) {
+      const { data: photos } = await authClient
+        .from("profile_photos")
+        .select("profile_id, photo_url, is_primary")
+        .in("profile_id", profileIds);
+
+      for (const photo of photos || []) {
+        if (!photosMap[photo.profile_id] || photo.is_primary) {
+          photosMap[photo.profile_id] = photo.photo_url;
+        }
+      }
+    }
+
+    // Score by keywords
+    const kw = (criteria.keywords || []).map((k) => String(k).toLowerCase()).slice(0, 12);
+    const scored = (profiles || [])
+      .map((p) => {
+        const bio = (p.bio || "").toLowerCase();
+        const ints = (p.interests || []).map((i: string) => i.toLowerCase());
+        let score = 0;
+        for (const k of kw) {
+          if (bio.includes(k)) score += 2;
+          if (ints.some((i: string) => i.includes(k))) score += 3;
+        }
+        return { ...p, score, photoUrl: photosMap[p.id] || null };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
 
     return new Response(
       JSON.stringify({
-        message: criteria.response || "Here are some matches for you!",
-        profiles: scoredProfiles,
+        message: criteria.response,
+        profiles: scored,
         criteria: {
           gender: criteria.gender,
           maxAge: criteria.maxAge,
           minAge: criteria.minAge,
           city: criteria.city,
-          interests: criteria.interests
-        }
+          interests: criteria.interests,
+        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
