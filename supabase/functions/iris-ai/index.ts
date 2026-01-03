@@ -13,33 +13,44 @@ serve(async (req) => {
 
   try {
     const { message, userId } = await req.json();
+    console.log("Received message:", message, "userId:", userId);
+    
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Supabase configuration missing");
       throw new Error("Supabase configuration missing");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get the user's profile to exclude from results
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: userError } = await supabase
       .from("profiles")
       .select("id, gender, looking_for")
       .eq("user_id", userId)
       .single();
 
+    if (userError) {
+      console.error("User profile error:", userError);
+    }
+
     if (!userProfile) {
+      console.log("User profile not found for userId:", userId);
       return new Response(
-        JSON.stringify({ error: "User profile not found" }),
+        JSON.stringify({ error: "User profile not found. Please complete your profile first." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("User profile found:", userProfile.id);
 
     // Use AI to parse the user's query and extract search criteria
     const parseResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -54,58 +65,35 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are IRIS AI, a friendly matchmaking assistant. Parse the user's dating preference request and extract search criteria.
-            
-Return a JSON object with these fields (use null for unspecified):
+
+You MUST respond with ONLY a valid JSON object, no other text. The JSON should have these fields (use null for unspecified):
 - gender: "male", "female", "non-binary", "other", or null
 - maxAge: number or null
 - minAge: number or null  
 - city: string or null (normalize city names, e.g., "Bangalore" not "Bengaluru")
 - interests: array of strings or null (e.g., ["finance", "tech", "music"])
-- keywords: array of strings for bio/interest matching
-
-Also include a friendly "response" field with a conversational message about what you're looking for.
+- keywords: array of strings for bio/interest matching (always include at least one keyword based on the query)
+- response: a friendly conversational message about what you're searching for
 
 Example input: "Find me a finance nerd, woman under 25 in Bangalore"
-Example output:
-{
-  "gender": "female",
-  "maxAge": 25,
-  "minAge": null,
-  "city": "Bangalore",
-  "interests": ["finance"],
-  "keywords": ["finance", "nerd", "investment", "stocks"],
-  "response": "Looking for finance-savvy women under 25 in Bangalore! Let me find some great matches for you..."
-}`
+Example response (ONLY JSON, nothing else):
+{"gender":"female","maxAge":25,"minAge":null,"city":"Bangalore","interests":["finance"],"keywords":["finance","nerd","investment","stocks"],"response":"Looking for finance-savvy women under 25 in Bangalore! Let me find some great matches for you..."}
+
+Example input: "Show me a tech nerd"
+Example response:
+{"gender":null,"maxAge":null,"minAge":null,"city":null,"interests":["tech","technology"],"keywords":["tech","nerd","programming","coding","software","developer"],"response":"Searching for tech enthusiasts! Let me find some great matches..."}`
           },
           { role: "user", content: message }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "parse_search_criteria",
-              description: "Parse dating search criteria from user message",
-              parameters: {
-                type: "object",
-                properties: {
-                  gender: { type: "string", enum: ["male", "female", "non-binary", "other"], nullable: true },
-                  maxAge: { type: "number", nullable: true },
-                  minAge: { type: "number", nullable: true },
-                  city: { type: "string", nullable: true },
-                  interests: { type: "array", items: { type: "string" }, nullable: true },
-                  keywords: { type: "array", items: { type: "string" } },
-                  response: { type: "string" }
-                },
-                required: ["keywords", "response"]
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "parse_search_criteria" } }
+        ]
       }),
     });
 
+    console.log("AI response status:", parseResponse.status);
+
     if (!parseResponse.ok) {
+      const errorText = await parseResponse.text();
+      console.error("AI parse error:", parseResponse.status, errorText);
+      
       if (parseResponse.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -118,30 +106,37 @@ Example output:
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errorText = await parseResponse.text();
-      console.error("AI parse error:", parseResponse.status, errorText);
       throw new Error("Failed to parse search criteria");
     }
 
     const parseData = await parseResponse.json();
+    console.log("AI response data:", JSON.stringify(parseData));
+    
     let criteria;
     
     try {
-      const toolCall = parseData.choices?.[0]?.message?.tool_calls?.[0];
-      if (toolCall?.function?.arguments) {
-        criteria = JSON.parse(toolCall.function.arguments);
+      const content = parseData.choices?.[0]?.message?.content || "";
+      console.log("AI content:", content);
+      
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        criteria = JSON.parse(jsonMatch[0]);
       } else {
-        // Fallback to content parsing
-        const content = parseData.choices?.[0]?.message?.content || "";
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        criteria = jsonMatch ? JSON.parse(jsonMatch[0]) : { keywords: [], response: "Let me search for profiles..." };
+        criteria = { 
+          keywords: [message.toLowerCase()], 
+          response: "Let me search for profiles matching your preferences..." 
+        };
       }
     } catch (e) {
       console.error("Error parsing AI response:", e);
-      criteria = { keywords: [], response: "I'll help you find matches! Let me search..." };
+      criteria = { 
+        keywords: [message.toLowerCase()], 
+        response: "I'll help you find matches! Let me search..." 
+      };
     }
 
-    console.log("Parsed criteria:", criteria);
+    console.log("Parsed criteria:", JSON.stringify(criteria));
 
     // Build the Supabase query
     let query = supabase
@@ -173,6 +168,8 @@ Example output:
       console.error("Profiles query error:", profilesError);
       throw new Error("Failed to fetch profiles");
     }
+
+    console.log("Found profiles:", profiles?.length || 0);
 
     // Fetch photos for the matched profiles
     const profileIds = profiles?.map(p => p.id) || [];
@@ -212,9 +209,11 @@ Example output:
       };
     }).sort((a, b) => b.score - a.score).slice(0, 5);
 
+    console.log("Returning profiles:", scoredProfiles.length);
+
     return new Response(
       JSON.stringify({
-        message: criteria.response,
+        message: criteria.response || "Here are some matches for you!",
         profiles: scoredProfiles,
         criteria: {
           gender: criteria.gender,
