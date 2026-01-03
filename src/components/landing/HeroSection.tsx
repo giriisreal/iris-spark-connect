@@ -24,7 +24,7 @@ const HeroSection = () => {
             className="flex items-center gap-3"
           >
             <img src={logo} alt="IRIS" className="w-10 h-10 object-contain" />
-            <span className="text-2xl font-bold text-foreground">IRIS</span>
+            <span className="text-2xl font-bold text-foreground"></span>
           </motion.div>
           
           <motion.div

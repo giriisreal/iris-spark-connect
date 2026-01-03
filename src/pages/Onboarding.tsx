@@ -141,7 +141,7 @@ const Onboarding = () => {
           });
         } else {
           toast({
-            title: 'Welcome to IRIS! 🌟',
+            title: 'Welcome to BUD AI! 🌟',
             description: 'Your authentic dating journey begins now.',
           });
           navigate('/discover');

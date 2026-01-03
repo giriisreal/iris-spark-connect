@@ -248,7 +248,7 @@ const Discover = () => {
       <nav className="p-3 md:p-4 flex items-center justify-between border-b-2 border-foreground bg-card">
         <div className="flex items-center gap-2">
           <img src={logo} alt="IRIS" className="w-7 h-7 md:w-8 md:h-8 object-contain" />
-          <span className="text-lg md:text-xl font-bold text-foreground">IRIS</span>
+          <span className="text-lg md:text-xl font-bold text-foreground">BUD</span>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
           <Button variant="ghost" size="icon" onClick={() => navigate('/matches')}>

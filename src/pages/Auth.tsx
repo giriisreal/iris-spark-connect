@@ -80,7 +80,7 @@ const Auth = () => {
           }
         } else {
           toast({
-            title: 'Welcome to IRIS! 🌿',
+            title: 'Welcome to Bud AI! 🌿',
             description: 'Account created successfully. Let\'s set up your profile!',
           });
           navigate('/onboarding');
@@ -162,7 +162,7 @@ const Auth = () => {
                   </h1>
                   <p className="text-muted-foreground">
                     {isSignUp 
-                      ? 'Join IRIS and start finding meaningful connections' 
+                      ? 'Join BUD and start finding meaningful connections' 
                       : 'Sign in to continue your journey'}
                   </p>
                 </div>
