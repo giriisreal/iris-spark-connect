@@ -187,7 +187,7 @@ const Profile = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div className="flex items-center gap-2 flex-1">
-          <img src={logo} alt="IRIS" className="w-6 h-6 object-contain" />
+          <img src={logo} alt="IRIS" className="w-10 h-10 object-contain" />
           <h1 className="text-lg md:text-xl font-bold text-foreground">Profile</h1>
         </div>
         {!editing ? (

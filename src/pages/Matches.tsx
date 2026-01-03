@@ -36,7 +36,7 @@ const Matches = () => {
           </div>
         </div>
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="IRIS" className="w-8 h-8 rounded-xl" />
+          <img src={logo} alt="IRIS" className="w-12 h-12 rounded-xl" />
         </Link>
       </nav>
       

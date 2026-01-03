@@ -23,7 +23,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-3"
           >
-            <img src={logo} alt="IRIS" className="w-10 h-10 object-contain" />
+            <img src={logo} alt="IRIS" className="w-14 h-14 object-contain" />
             <span className="text-2xl font-bold text-foreground">IRIS</span>
           </motion.div>
           
