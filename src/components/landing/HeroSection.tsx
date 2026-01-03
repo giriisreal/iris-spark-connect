@@ -124,12 +124,12 @@ const HeroSection = () => {
 
        
 
-        {/* App Preview Cards */}
+        {/* App Preview Cards - Hidden on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-24 flex justify-center gap-4"
+          className="mt-24 hidden md:flex justify-center gap-4"
         >
           <div className="w-48 h-80 rounded-2xl bg-card border-2 border-foreground shadow-[6px_6px_0px_0px_hsl(var(--foreground))] overflow-hidden -rotate-6">
             <div className="h-full bg-gradient-to-br bg-cover from-primary/20 to-secondary/20 flex items-end p-4"

@@ -11,6 +11,7 @@ import Discover from "./pages/Discover";
 import Matches from "./pages/Matches";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
+import IrisAI from "./pages/IrisAI";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/matches" element={<Matches />} />
             <Route path="/chat/:matchId" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/iris" element={<IrisAI />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
