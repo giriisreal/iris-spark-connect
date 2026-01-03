@@ -247,13 +247,14 @@ const Discover = () => {
       {/* Header */}
       <nav className="p-3 md:p-4 flex items-center justify-between border-b-2 border-foreground bg-card">
         <div className="flex items-center gap-2">
-<<<<<<< HEAD
-          <img src={logo} alt="IRIS" className="w-7 h-7 md:w-8 md:h-8 object-contain" />
-          <span className="text-lg md:text-xl font-bold text-foreground">BUD</span>
-=======
-          <img src={logo} alt="IRIS" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
-          <span className="text-lg md:text-xl font-bold text-foreground">IRIS</span>
->>>>>>> 8c34c6ed637302bfefca9d2c3a39b274597018f7
+        <img
+  src={logo}
+  alt="IRIS"
+  className="w-10 h-10 md:w-12 md:h-12 object-contain"
+/>
+<span className="text-lg md:text-xl font-bold text-foreground">
+  IRIS
+</span>
         </div>
         <div className="flex items-center gap-1 md:gap-2">
           <Button 
