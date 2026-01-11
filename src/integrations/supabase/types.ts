@@ -116,6 +116,70 @@ export type Database = {
           },
         ]
       }
+      community_posts: {
+        Row: {
+          author_id: string
+          community_id: string
+          content: string
+          created_at: string
+          downvotes: number | null
+          id: string
+          is_pinned: boolean | null
+          parent_post_id: string | null
+          title: string | null
+          updated_at: string
+          upvotes: number | null
+        }
+        Insert: {
+          author_id: string
+          community_id: string
+          content: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          is_pinned?: boolean | null
+          parent_post_id?: string | null
+          title?: string | null
+          updated_at?: string
+          upvotes?: number | null
+        }
+        Update: {
+          author_id?: string
+          community_id?: string
+          content?: string
+          created_at?: string
+          downvotes?: number | null
+          id?: string
+          is_pinned?: boolean | null
+          parent_post_id?: string | null
+          title?: string | null
+          updated_at?: string
+          upvotes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_parent_post_id_fkey"
+            columns: ["parent_post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_updates: {
         Row: {
           caption: string | null
@@ -144,6 +208,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "daily_updates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_usage: {
+        Row: {
+          ai_prompts_used: number | null
+          created_at: string
+          id: string
+          matches_shown: number | null
+          openers_sent: number | null
+          profile_id: string
+          updated_at: string
+          usage_date: string
+        }
+        Insert: {
+          ai_prompts_used?: number | null
+          created_at?: string
+          id?: string
+          matches_shown?: number | null
+          openers_sent?: number | null
+          profile_id: string
+          updated_at?: string
+          usage_date?: string
+        }
+        Update: {
+          ai_prompts_used?: number | null
+          created_at?: string
+          id?: string
+          matches_shown?: number | null
+          openers_sent?: number | null
+          profile_id?: string
+          updated_at?: string
+          usage_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_usage_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -322,6 +427,45 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          profile_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          profile_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          profile_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_votes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -582,6 +726,59 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions: {
+        Row: {
+          amount_paid: number | null
+          created_at: string
+          currency: string | null
+          expires_at: string | null
+          id: string
+          is_lifetime: boolean | null
+          plan_type: string
+          profile_id: string
+          purchased_at: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          is_lifetime?: boolean | null
+          plan_type?: string
+          profile_id: string
+          purchased_at?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          is_lifetime?: boolean | null
+          plan_type?: string
+          profile_id?: string
+          purchased_at?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_intros: {
         Row: {
           audio_url: string
@@ -619,7 +816,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_or_create_daily_usage: {
+        Args: { p_profile_id: string }
+        Returns: {
+          ai_prompts_used: number | null
+          created_at: string
+          id: string
+          matches_shown: number | null
+          openers_sent: number | null
+          profile_id: string
+          updated_at: string
+          usage_date: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "daily_usage"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      is_user_premium: { Args: { p_profile_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
