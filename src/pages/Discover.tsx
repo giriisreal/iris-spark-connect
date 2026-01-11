@@ -6,7 +6,7 @@ import { useProfile, ProfilePhoto } from '@/hooks/useProfile';
 import { useLocation } from '@/hooks/useLocation';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Heart, X, Sparkles, MapPin, User, MessageCircle, LogOut, Loader2, Eye } from 'lucide-react';
+import { Heart, X, Sparkles, MapPin, User, MessageCircle, LogOut, Loader2, Eye, Crown, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import UserProfileView from '@/components/UserProfileView';
 import logo from '@/assets/logo.png';
@@ -265,6 +265,12 @@ const Discover = () => {
             title="Bud AI Matchmaker"
           >
             <Sparkles className="w-5 h-5 text-primary" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/community')}>
+            <Users className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/premium')}>
+            <Crown className="w-5 h-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => navigate('/matches')}>
             <MessageCircle className="w-5 h-5" />
