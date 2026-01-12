@@ -52,10 +52,12 @@ serve(async (req) => {
     }
 
     // Create Razorpay order
+    // Receipt must be <= 40 chars, so use short format
+    const shortId = profile.id.substring(0, 8);
     const orderData = {
       amount: 200000, // ₹2000 in paise
       currency: "INR",
-      receipt: `premium_${profile.id}_${Date.now()}`,
+      receipt: `prem_${shortId}_${Date.now()}`,
       notes: {
         profile_id: profile.id,
         plan: "lifetime_premium",
