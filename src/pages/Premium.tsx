@@ -70,7 +70,7 @@ const Premium = () => {
         throw new Error('Please log in to continue');
       }
 
-      // Create order
+      // Create subscription
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -78,18 +78,16 @@ const Premium = () => {
       });
 
       if (error || !data) {
-        throw new Error(error?.message || 'Failed to create order');
+        throw new Error(error?.message || 'Failed to create subscription');
       }
 
-      // Open Razorpay checkout
+      // Open Razorpay checkout for subscription
       const options = {
         key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
+        subscription_id: data.subscriptionId,
         name: 'Bud AI',
-        description: 'Lifetime Premium Membership',
+        description: 'Monthly Premium Subscription',
         image: logo,
-        order_id: data.orderId,
         prefill: {
           name: data.profileName,
           email: data.userEmail,
@@ -98,11 +96,11 @@ const Premium = () => {
           color: '#7a8a3c',
         },
         handler: async (response: any) => {
-          // Verify payment
+          // Verify subscription payment
           const { error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
             body: {
-              razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
               razorpay_signature: response.razorpay_signature,
               profile_id: data.profileId,
             },
@@ -117,7 +115,7 @@ const Premium = () => {
 
           toast({
             title: "Welcome to Premium! 🎉",
-            description: "You now have unlimited access to all features!",
+            description: "Your monthly subscription is now active!",
           });
 
           await refreshSubscription();
@@ -231,7 +229,7 @@ const Premium = () => {
           </div>
           <h2 className="text-3xl font-bold mb-2">Unlock Bud AI Premium</h2>
           <p className="text-muted-foreground">
-            Get unlimited access to all features for a one-time payment
+            Get unlimited access to all features with a monthly subscription
           </p>
         </motion.div>
 
@@ -263,14 +261,14 @@ const Premium = () => {
           {/* Premium Plan */}
           <Card className="border-2 border-primary relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-sm font-medium rounded-bl-lg">
-              BEST VALUE
+              POPULAR
             </div>
             <CardContent className="p-6">
               <h3 className="text-xl font-bold mb-1">Premium</h3>
-              <p className="text-muted-foreground text-sm mb-4">Lifetime access</p>
+              <p className="text-muted-foreground text-sm mb-4">Cancel anytime</p>
               <p className="text-3xl font-bold mb-6">
-                ₹2,000
-                <span className="text-sm font-normal text-muted-foreground ml-2">one-time</span>
+                ₹199
+                <span className="text-sm font-normal text-muted-foreground ml-2">/month</span>
               </p>
               <div className="space-y-3 mb-6">
                 {premiumFeatures.map((feature, i) => (
