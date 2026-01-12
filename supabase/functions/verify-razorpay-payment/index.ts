@@ -37,10 +37,10 @@ serve(async (req) => {
       });
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, profile_id } = await req.json();
+    const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature, profile_id } = await req.json();
 
-    // Verify signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    // Verify signature for subscriptions: payment_id|subscription_id
+    const body = razorpay_payment_id + "|" + razorpay_subscription_id;
     const expectedSignature = createHmac("sha256", razorpayKeySecret)
       .update(body)
       .digest("hex");
@@ -66,6 +66,11 @@ serve(async (req) => {
       });
     }
 
+    // Calculate next month expiry
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextMonth.setDate(nextMonth.getDate() + 3); // Add buffer days
+
     // Create or update subscription
     const { error: subError } = await supabase
       .from("user_subscriptions")
@@ -73,12 +78,12 @@ serve(async (req) => {
         profile_id: profile_id,
         plan_type: "premium",
         razorpay_payment_id,
-        razorpay_order_id,
-        amount_paid: 200000, // ₹2000 in paise
+        razorpay_order_id: razorpay_subscription_id, // Store subscription ID here
+        amount_paid: null, // Amount comes from plan
         currency: "INR",
         purchased_at: new Date().toISOString(),
-        is_lifetime: true,
-        expires_at: null,
+        is_lifetime: false,
+        expires_at: nextMonth.toISOString(),
       }, {
         onConflict: "profile_id",
       });
@@ -94,7 +99,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Payment verified and subscription activated!",
+        message: "Subscription activated! You'll be billed monthly.",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

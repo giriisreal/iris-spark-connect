@@ -17,6 +17,9 @@ serve(async (req) => {
     const razorpayKeyId = Deno.env.get("RAZORPAY_KEY_ID")!;
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET")!;
 
+    // Razorpay Plan ID for monthly subscription
+    const RAZORPAY_PLAN_ID = "plan_S2r7uJz7n1ZzwD";
+
     // Verify JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -51,46 +54,42 @@ serve(async (req) => {
       });
     }
 
-    // Create Razorpay order
-    // Receipt must be <= 40 chars, so use short format
-    const shortId = profile.id.substring(0, 8);
-    const orderData = {
-      amount: 200000, // ₹2000 in paise
-      currency: "INR",
-      receipt: `prem_${shortId}_${Date.now()}`,
+    // Create Razorpay Subscription
+    const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+    
+    const subscriptionData = {
+      plan_id: RAZORPAY_PLAN_ID,
+      customer_notify: 1,
+      total_count: 120, // 10 years max (120 months)
       notes: {
         profile_id: profile.id,
-        plan: "lifetime_premium",
+        plan: "monthly_premium",
       },
     };
 
-    const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
-    
-    const response = await fetch("https://api.razorpay.com/v1/orders", {
+    const response = await fetch("https://api.razorpay.com/v1/subscriptions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Basic ${auth}`,
       },
-      body: JSON.stringify(orderData),
+      body: JSON.stringify(subscriptionData),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Razorpay error:", errorText);
-      return new Response(JSON.stringify({ error: "Failed to create order" }), {
+      return new Response(JSON.stringify({ error: "Failed to create subscription" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const order = await response.json();
+    const subscription = await response.json();
 
     return new Response(
       JSON.stringify({
-        orderId: order.id,
-        amount: order.amount,
-        currency: order.currency,
+        subscriptionId: subscription.id,
         keyId: razorpayKeyId,
         profileId: profile.id,
         profileName: profile.name,
