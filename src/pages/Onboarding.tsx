@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
-import { Heart, User, MapPin, Sparkles, ArrowRight, ArrowLeft, Check, Loader2, Zap, Shield, Music, Gamepad2, BookOpen, Brain } from 'lucide-react';
+import { Heart, User, MapPin, Sparkles, ArrowRight, ArrowLeft, Check, Loader2, Zap, Shield, GraduationCap, Mail } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import logo from '@/assets/logo.png';
 
 const INTERESTS = [
@@ -44,9 +45,26 @@ const NON_NEGOTIABLES = [
   'Independence', 'Family values', 'Adventure', 'Creativity', 'Loyalty'
 ];
 
+const POPULAR_COLLEGES = [
+  'IIT Delhi', 'IIT Bombay', 'IIT Madras', 'IIT Kanpur', 'IIT Kharagpur',
+  'BITS Pilani', 'NIT Trichy', 'NIT Warangal', 'DTU', 'NSUT',
+  'Delhi University', 'JNU', 'Ashoka University', 'Christ University',
+  'Manipal University', 'VIT Vellore', 'SRM Chennai', 'Amity University',
+  'Jadavpur University', 'Anna University', 'IIIT Hyderabad', 'ISB Hyderabad'
+];
+
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [collegeSearch, setCollegeSearch] = useState('');
+  const { user } = useAuth();
+  
+  // Check if user has college email domain
+  const userEmail = user?.email || '';
+  const emailDomain = userEmail.split('@')[1] || '';
+  const isCollegeEmail = emailDomain.endsWith('.edu') || emailDomain.endsWith('.ac.in') || emailDomain.includes('edu.');
+  const detectedCollege = isCollegeEmail ? emailDomain.replace('.edu', '').replace('.ac.in', '').split('.')[0].toUpperCase() : '';
+  
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -54,6 +72,7 @@ const Onboarding = () => {
     pronouns: '',
     bio: '',
     city: '',
+    college: detectedCollege,
     interests: [] as string[],
     looking_for: [] as string[],
     vibeStatus: 'chill',
@@ -65,7 +84,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const totalSteps = 6;
+  const totalSteps = 7;
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -105,12 +124,14 @@ const Onboarding = () => {
       case 2:
         return formData.gender !== '';
       case 3:
-        return formData.vibeStatus !== '';
+        return true; // College is optional
       case 4:
-        return formData.interests.length >= 3;
+        return formData.vibeStatus !== '';
       case 5:
-        return formData.looking_for.length > 0;
+        return formData.interests.length >= 3;
       case 6:
+        return formData.looking_for.length > 0;
+      case 7:
         return true;
       default:
         return false;
@@ -129,6 +150,7 @@ const Onboarding = () => {
           gender: formData.gender,
           bio: formData.bio || null,
           city: formData.city || null,
+          college: formData.college || null,
           interests: formData.interests,
           looking_for: formData.looking_for,
         });
@@ -275,9 +297,90 @@ const Onboarding = () => {
         );
 
       case 3:
+        const filteredColleges = collegeSearch
+          ? POPULAR_COLLEGES.filter(c => c.toLowerCase().includes(collegeSearch.toLowerCase()))
+          : POPULAR_COLLEGES;
+        
         return (
           <motion.div
             key="step3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4 border-2 border-foreground shadow-[4px_4px_0px_0px_hsl(var(--foreground))]">
+                <GraduationCap className="w-10 h-10 text-blue-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Your University 🎓</h2>
+              <p className="text-muted-foreground">Find people from your campus</p>
+            </div>
+
+            {isCollegeEmail && (
+              <div className="p-4 rounded-xl bg-primary/10 border-2 border-primary/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="w-5 h-5 text-primary" />
+                  <span className="font-medium text-sm">College email detected!</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  We detected you signed up with: <span className="font-mono">{userEmail}</span>
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="college">Search or type your college</Label>
+                <Input
+                  id="college"
+                  placeholder="Type to search or enter custom..."
+                  value={formData.college}
+                  onChange={(e) => {
+                    updateFormData('college', e.target.value);
+                    setCollegeSearch(e.target.value);
+                  }}
+                  className="border-2 border-foreground"
+                />
+              </div>
+
+              <div className="max-h-[180px] overflow-y-auto space-y-2">
+                <p className="text-xs text-muted-foreground font-medium">Popular colleges:</p>
+                <div className="flex flex-wrap gap-2">
+                  {filteredColleges.slice(0, 12).map((college) => (
+                    <motion.button
+                      key={college}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => updateFormData('college', college)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border-2 ${
+                        formData.college === college
+                          ? 'bg-primary text-primary-foreground border-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]'
+                          : 'bg-card border-border hover:border-foreground'
+                      }`}
+                    >
+                      {college}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => updateFormData('college', '')}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Skip - I'd rather not share
+              </button>
+            </div>
+          </motion.div>
+        );
+
+      case 4:
+        return (
+          <motion.div
+            key="step4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -318,10 +421,10 @@ const Onboarding = () => {
           </motion.div>
         );
 
-      case 4:
+      case 5:
         return (
           <motion.div
-            key="step4"
+            key="step5"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -359,10 +462,10 @@ const Onboarding = () => {
           </motion.div>
         );
 
-      case 5:
+      case 6:
         return (
           <motion.div
-            key="step5"
+            key="step6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -421,7 +524,7 @@ const Onboarding = () => {
           </motion.div>
         );
 
-      case 6:
+      case 7:
         return (
           <motion.div
             key="step6"
