@@ -512,6 +512,7 @@ export type Database = {
           boundaries: string[] | null
           break_mode_until: string | null
           city: string | null
+          college: string | null
           comfort_tags: string[] | null
           compatibility_data: Json | null
           created_at: string
@@ -547,6 +548,7 @@ export type Database = {
           boundaries?: string[] | null
           break_mode_until?: string | null
           city?: string | null
+          college?: string | null
           comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string
@@ -582,6 +584,7 @@ export type Database = {
           boundaries?: string[] | null
           break_mode_until?: string | null
           city?: string | null
+          college?: string | null
           comfort_tags?: string[] | null
           compatibility_data?: Json | null
           created_at?: string

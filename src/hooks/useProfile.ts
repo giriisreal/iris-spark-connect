@@ -35,6 +35,7 @@ export interface Profile {
   social_links: any;
   pickup_lines: string[] | null;
   personal_notes: string[] | null;
+  college: string | null;
 }
 
 export interface ProfilePhoto {
@@ -102,6 +103,7 @@ export const useProfile = () => {
         gender: profileData.gender,
         bio: profileData.bio,
         city: profileData.city,
+        college: profileData.college,
         interests: profileData.interests,
         looking_for: profileData.looking_for,
       }])
