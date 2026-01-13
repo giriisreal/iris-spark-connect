@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, User, Loader2, MoreVertical, Ban, Sparkles, X } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +16,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import UserProfileView from '@/components/UserProfileView';
+import ChatMessage from '@/components/chat/ChatMessage';
+import ReplyPreview from '@/components/chat/ReplyPreview';
+import { EmojiButton } from '@/components/chat/EmojiPicker';
+import MediaUpload from '@/components/chat/MediaUpload';
 
 interface OtherProfile {
   id: string;
@@ -33,17 +36,25 @@ interface OtherProfile {
   photos: { id: string; photo_url: string; is_primary: boolean | null; order_index: number | null; profile_id: string; created_at: string }[];
 }
 
+interface ReplyTo {
+  id: string;
+  content: string;
+  sender_id: string;
+}
+
 const Chat = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { messages, loading, sendMessage, markAsRead } = useChat(matchId || '');
+  const { messages, loading, sendMessage, markAsRead, addReaction, removeReaction, getMessageReactions } = useChat(matchId || '');
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [otherProfile, setOtherProfile] = useState<OtherProfile | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [replyTo, setReplyTo] = useState<ReplyTo | null>(null);
+  const [pendingMedia, setPendingMedia] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const suggestionsTimerRef = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -150,7 +161,7 @@ const Chat = () => {
     }
   }, [messages, otherProfile, profile, toast]);
 
-  // Auto-generate smart replies when the other person sends a message (LinkedIn-style)
+  // Auto-generate smart replies when the other person sends a message
   useEffect(() => {
     if (!otherProfile || !profile) return;
     if (newMessage.trim().length > 0) return;
@@ -176,14 +187,20 @@ const Chat = () => {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    if ((!newMessage.trim() && !pendingMedia) || sending) return;
 
     setSending(true);
-    const { error } = await sendMessage(newMessage);
+    const { error } = await sendMessage(newMessage, {
+      replyToId: replyTo?.id,
+      mediaUrl: pendingMedia?.url,
+      mediaType: pendingMedia?.type,
+    });
 
     if (!error) {
       setNewMessage('');
       setSuggestions([]);
+      setReplyTo(null);
+      setPendingMedia(null);
     } else {
       toast({
         title: 'Error',
@@ -197,6 +214,22 @@ const Chat = () => {
   const handleUseSuggestion = (suggestion: string) => {
     setNewMessage(suggestion);
     setSuggestions([]);
+  };
+
+  const handleReply = (message: { id: string; content: string; sender_id: string }) => {
+    setReplyTo({
+      id: message.id,
+      content: message.content,
+      sender_id: message.sender_id,
+    });
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+  };
+
+  const handleMediaUpload = (url: string, type: 'image' | 'video') => {
+    setPendingMedia({ url, type });
   };
 
   const handleBlock = async () => {
@@ -286,33 +319,19 @@ const Chat = () => {
             </Button>
           </div>
         ) : (
-          messages.map((message, index) => {
-            const isOwn = message.sender_id === profile?.id;
-
-            return (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
-                className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-xl px-4 py-2 border-2 border-foreground ${
-                    isOwn
-                      ? 'bg-primary text-primary-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]'
-                      : 'bg-card text-foreground shadow-[2px_2px_0px_0px_hsl(var(--foreground))]'
-                  }`}
-                >
-                  <p className="text-sm">{message.content}</p>
-                  <p className={`text-xs mt-1 ${isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                    {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                    {isOwn && message.read_at && ' • Read'}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })
+          messages.map((message, index) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              isOwn={message.sender_id === profile?.id}
+              reactions={getMessageReactions(message.id)}
+              onReply={handleReply}
+              onAddReaction={addReaction}
+              onRemoveReaction={removeReaction}
+              index={index}
+              otherName={otherProfile?.name}
+            />
+          ))
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -350,9 +369,48 @@ const Chat = () => {
         )}
       </AnimatePresence>
 
+      {/* Reply Preview */}
+      {replyTo && (
+        <ReplyPreview
+          replyTo={replyTo}
+          isOwnMessage={replyTo.sender_id === profile?.id}
+          otherName={otherProfile?.name}
+          onClear={() => setReplyTo(null)}
+        />
+      )}
+
+      {/* Pending Media Preview */}
+      {pendingMedia && (
+        <div className="px-4 py-2 bg-muted/50 border-t border-border">
+          <div className="flex items-center gap-2">
+            {pendingMedia.type === 'image' ? (
+              <img src={pendingMedia.url} alt="Preview" className="w-16 h-16 object-cover rounded-lg border-2 border-foreground" />
+            ) : (
+              <video src={pendingMedia.url} className="w-16 h-16 object-cover rounded-lg border-2 border-foreground" />
+            )}
+            <button
+              onClick={() => setPendingMedia(null)}
+              className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <form onSubmit={handleSend} className="p-4 border-t-2 border-foreground bg-card">
         <div className="flex items-center gap-2 max-w-md mx-auto">
+          <EmojiButton onSelect={handleEmojiSelect} />
+          
+          {profile && matchId && (
+            <MediaUpload
+              matchId={matchId}
+              profileId={profile.id}
+              onUpload={handleMediaUpload}
+            />
+          )}
+          
           <Button
             type="button"
             variant="ghost"
@@ -367,6 +425,7 @@ const Chat = () => {
               <Sparkles className="w-5 h-5 text-primary" />
             )}
           </Button>
+          
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -378,7 +437,7 @@ const Chat = () => {
             type="submit"
             variant="hero"
             size="icon"
-            disabled={!newMessage.trim() || sending}
+            disabled={(!newMessage.trim() && !pendingMedia) || sending}
           >
             {sending ? (
               <Loader2 className="w-5 h-5 animate-spin" />

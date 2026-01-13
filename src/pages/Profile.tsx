@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { ArrowLeft, User, LogOut, Camera, Trash2, MapPin, Loader2, Save, Image, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, User, LogOut, Camera, Trash2, MapPin, Loader2, Save, Image, Star, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/logo.png';
@@ -26,6 +26,7 @@ import NonNegotiablesEditor from '@/components/NonNegotiablesEditor';
 import PickupLinesEditor from '@/components/PickupLinesEditor';
 import PersonalNotesEditor from '@/components/PersonalNotesEditor';
 import DailyUpdatesEditor from '@/components/DailyUpdatesEditor';
+import CollegeEditor from '@/components/profile/CollegeEditor';
 
 const MAX_PHOTOS = 6;
 
@@ -407,6 +408,22 @@ const Profile = () => {
               Update
             </Button>
           </div>
+        </div>
+
+        {/* College Section */}
+        <div className="bg-card rounded-xl border-2 border-foreground shadow-[4px_4px_0px_0px_hsl(var(--foreground))] p-4 md:p-6">
+          <h2 className="font-bold text-foreground flex items-center gap-2 mb-4">
+            <GraduationCap className="w-5 h-5" />
+            Your College/University
+          </h2>
+          <CollegeEditor
+            currentCollege={profile?.college || null}
+            onSave={async (college) => {
+              await updateProfile({ college });
+              fetchProfile();
+            }}
+            isEditing={editing}
+          />
         </div>
 
         {/* Preferences Section */}
