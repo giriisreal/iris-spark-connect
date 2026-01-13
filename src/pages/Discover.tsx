@@ -6,9 +6,10 @@ import { useProfile, ProfilePhoto } from '@/hooks/useProfile';
 import { useLocation } from '@/hooks/useLocation';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Heart, X, Sparkles, MapPin, User, MessageCircle, LogOut, Loader2, Eye, Crown, Users } from 'lucide-react';
+import { Heart, X, Sparkles, MapPin, User, MessageCircle, LogOut, Loader2, Eye, Crown, Users, GraduationCap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import UserProfileView from '@/components/UserProfileView';
+import CampusBadge from '@/components/CampusBadge';
 import logo from '@/assets/logo.png';
 
 interface DiscoverProfile {
@@ -29,6 +30,7 @@ interface DiscoverProfile {
   pickupLines?: string[];
   personalNotes?: string[];
   voiceIntroUrl?: string;
+  college?: string | null;
 }
 
 const SWIPE_THRESHOLD = 100;
@@ -84,7 +86,7 @@ const Discover = () => {
     
     let query = supabase
       .from('profiles')
-      .select('id, name, age, bio, city, interests, location_lat, location_lng, vibe_status, non_negotiables, pickup_lines, personal_notes, voice_intro_url')
+      .select('id, name, age, bio, city, interests, location_lat, location_lng, vibe_status, non_negotiables, pickup_lines, personal_notes, voice_intro_url, college')
       .neq('id', profile.id);
 
     if (profile.looking_for && profile.looking_for.length > 0) {
@@ -129,6 +131,7 @@ const Discover = () => {
             pickupLines: p.pickup_lines || undefined,
             personalNotes: p.personal_notes || undefined,
             voiceIntroUrl: p.voice_intro_url || undefined,
+            college: p.college || null,
           };
         });
 
@@ -376,6 +379,12 @@ const Discover = () => {
                 
                 {/* Content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 pointer-events-none">
+                  {/* Campus Badge */}
+                  {currentProfile.college && profile?.college && 
+                   currentProfile.college.toLowerCase() === profile.college.toLowerCase() && (
+                    <CampusBadge college={currentProfile.college} className="mb-2" />
+                  )}
+                  
                   <h2 className="text-2xl md:text-3xl font-bold text-card mb-1">
                     {currentProfile.name}, {currentProfile.age}
                   </h2>
