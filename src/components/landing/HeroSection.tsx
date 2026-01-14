@@ -1,8 +1,109 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Heart, Sparkles, Shield, ArrowRight, Zap } from 'lucide-react';
+import { Heart, Sparkles, Shield, ArrowRight, Zap, MapPin, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.png';
+import sampleProfile1 from '@/assets/sample-profile-1.jpg';
+import sampleProfile2 from '@/assets/sample-profile-2.jpg';
+import sampleProfile3 from '@/assets/sample-profile-3.jpg';
+import sampleProfile4 from '@/assets/sample-profile-4.jpg';
+
+const sampleProfiles = [
+  {
+    id: 1,
+    name: 'Priya',
+    age: 23,
+    location: 'Mumbai',
+    image: sampleProfile1,
+    interests: ['Photography', 'Travel'],
+    college: 'IIT Bombay',
+  },
+  {
+    id: 2,
+    name: 'Arjun',
+    age: 25,
+    location: 'Delhi',
+    image: sampleProfile2,
+    interests: ['Music', 'Fitness'],
+    college: 'Delhi University',
+  },
+  {
+    id: 3,
+    name: 'Ananya',
+    age: 22,
+    location: 'Bangalore',
+    image: sampleProfile3,
+    interests: ['Art', 'Reading'],
+    college: 'BITS Pilani',
+  },
+  {
+    id: 4,
+    name: 'Rahul',
+    age: 24,
+    location: 'Pune',
+    image: sampleProfile4,
+    interests: ['Gaming', 'Cooking'],
+    college: 'VIT Pune',
+  },
+];
+
+const ProfileCard = ({ profile, index }: { profile: typeof sampleProfiles[0]; index: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40, rotate: index % 2 === 0 ? -3 : 3 }}
+    animate={{ opacity: 1, y: 0, rotate: index % 2 === 0 ? -3 : 3 }}
+    transition={{ delay: 0.6 + index * 0.1 }}
+    whileHover={{ scale: 1.05, rotate: 0, zIndex: 10 }}
+    className="relative w-64 h-80 rounded-2xl overflow-hidden border-2 border-foreground shadow-[4px_4px_0px_0px_hsl(var(--foreground))] bg-card cursor-pointer flex-shrink-0"
+  >
+    <img
+      src={profile.image}
+      alt={profile.name}
+      className="w-full h-full object-cover"
+    />
+    {/* Gradient Overlay */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+    
+    {/* Profile Info */}
+    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+      <div className="flex items-center gap-2 mb-1">
+        <h3 className="text-xl font-bold">{profile.name}, {profile.age}</h3>
+        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+      </div>
+      <div className="flex items-center gap-1 text-sm text-white/80 mb-2">
+        <MapPin className="w-3 h-3" />
+        {profile.location} • {profile.college}
+      </div>
+      <div className="flex gap-1.5 flex-wrap">
+        {profile.interests.map((interest) => (
+          <span
+            key={interest}
+            className="px-2 py-0.5 text-xs bg-white/20 backdrop-blur-sm rounded-full"
+          >
+            {interest}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    {/* Action Buttons */}
+    <div className="absolute bottom-4 right-4 flex gap-2">
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30"
+      >
+        <X className="w-5 h-5 text-white" />
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="w-10 h-10 rounded-full bg-primary flex items-center justify-center border-2 border-white/30"
+      >
+        <Heart className="w-5 h-5 text-white" />
+      </motion.button>
+    </div>
+  </motion.div>
+);
 
 const HeroSection = () => {
   return (
@@ -120,7 +221,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-16 text-sm text-muted-foreground"
+            className="mt-12 text-sm text-muted-foreground"
           >
             <div className="flex items-center justify-center gap-8 flex-wrap opacity-60">
               <div className="flex items-center gap-2 font-semibold text-foreground">
@@ -134,6 +235,29 @@ const HeroSection = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Profile Preview Cards */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mt-20 pb-8"
+        >
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="text-center text-2xl md:text-3xl font-bold text-foreground mb-8"
+          >
+            Meet Amazing People
+          </motion.h2>
+          
+          <div className="flex justify-center gap-6 flex-wrap px-4">
+            {sampleProfiles.map((profile, index) => (
+              <ProfileCard key={profile.id} profile={profile} index={index} />
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );
