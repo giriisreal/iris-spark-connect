@@ -3,46 +3,46 @@ import { Button } from '@/components/ui/button';
 import { Heart, Sparkles, Shield, ArrowRight, Zap, MapPin, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import logo from '@/assets/logo.png';
-import sampleProfile1 from '@/assets/sample-profile-1.jpg';
-import sampleProfile2 from '@/assets/sample-profile-2.jpg';
-import sampleProfile3 from '@/assets/sample-profile-3.jpg';
-import sampleProfile4 from '@/assets/sample-profile-4.jpg';
+import profileKristine from '@/assets/profile-kristine.jpg';
+import profileAshwin from '@/assets/profile-ashwin.jpg';
+import profileMatt from '@/assets/profile-matt.jpg';
+import profileSara from '@/assets/profile-sara.jpg';
 
 const sampleProfiles = [
   {
     id: 1,
-    name: 'Priya',
-    age: 23,
+    name: 'Kristine',
+    age: 21,
     location: 'Mumbai',
-    image: sampleProfile1,
+    image: profileKristine,
     interests: ['Photography', 'Travel'],
     college: 'IIT Bombay',
   },
   {
     id: 2,
-    name: 'Arjun',
-    age: 25,
+    name: 'Ashwin',
+    age: 22,
     location: 'Delhi',
-    image: sampleProfile2,
+    image: profileAshwin,
     interests: ['Music', 'Fitness'],
     college: 'Delhi University',
   },
   {
     id: 3,
-    name: 'Ananya',
-    age: 22,
+    name: 'Matt',
+    age: 20,
     location: 'Bangalore',
-    image: sampleProfile3,
-    interests: ['Art', 'Reading'],
+    image: profileMatt,
+    interests: ['Art', 'Adventure'],
     college: 'BITS Pilani',
   },
   {
     id: 4,
-    name: 'Rahul',
-    age: 24,
+    name: 'Sara',
+    age: 23,
     location: 'Pune',
-    image: sampleProfile4,
-    interests: ['Gaming', 'Cooking'],
+    image: profileSara,
+    interests: ['Reading', 'Cooking'],
     college: 'VIT Pune',
   },
 ];
@@ -236,12 +236,12 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Profile Preview Cards */}
+        {/* Profile Preview Cards - Hidden on mobile, visible on tablet and up */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-20 pb-8"
+          className="mt-20 pb-8 hidden md:block"
         >
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
